@@ -1,324 +1,100 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-
+<!doctype html>
+<html lang="zh-TW" class="h-100">
 <head>
-    <title>你短短</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        html,
-        body {
-            background-color: #fff;
-            color: #636b6f;
-            font-family: 'Nunito', sans-serif;
-            font-weight: 200;
-            height: 100vh;
-            margin: 0;
-        }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="heitang512">
+  <title>ShortYou ฅ•ω•ฅ</title>
+  <link rel="icon" href="img/favicon.ico" type="image/x-icon" />
+  <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/cover/">
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/cover.css" rel="stylesheet">
+  <link href="css/main.css" rel="stylesheet">
+  <link href="css/load.css" rel="stylesheet">
+  
+  <style>
+    .bd-placeholder-img {
+      font-size: 1.125rem;
+      text-anchor: middle;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+    }
 
-        .full-height {
-            height: 80vh;
-        }
-
-        .flex-center {
-            align-items: center;
-            display: flex;
-            justify-content: center;
-        }
-
-        .position-ref {
-            position: relative;
-        }
-
-        .top-right {
-            position: absolute;
-            right: 10px;
-            top: 18px;
-        }
-
-        .content {
-            text-align: center;
-            min-width: 30vw;
-        }
-
-        .title {
-            font-size: 6em;
-        }
-
-        .subtitle {
-            font-size: 2em;
-        }
-
-        .m-b-md {
-            margin-bottom: 30px;
-        }
-
-        @media (max-width: 767.98px) {
-            .content {
-                width: auto;
-            }
-        }
-
-        .mask {
-            position: absolute;
-            top: 0px;
-            left: 0px;
-            width: 100%;
-            height: 100vh;
-            padding-top: 48.5vh;
-            display: flex;
-            background: rgba(167, 167, 167, 0.9);
-            text-align: center;
-            z-index: 99;
-        }
-
-        .mask>p {
-            font-family: 'Nunito', sans-serif;
-            font-size: 1.75em;
-            color: #347fc3;
-            font-family: helvetica, sans-serif;
-            font-weight: bold;
-        }
-
-        .dash {
-            margin: 0 1.5vw;
-            width: 3.5vw;
-            height: 1.5vw;
-            border-radius: 0.8vw;
-            background: rgb(77, 162, 237);
-            box-shadow: 0 0 0.10vw 0 #0444BF;
-            display: inline-block;
-        }
-
-        .uno {
-            margin-right: -1.8vw;
-            transform-origin: center left;
-            animation: spin 3s linear infinite;
-        }
-
-        .dos {
-            transform-origin: center right;
-            animation: spin2 3s linear infinite;
-            animation-delay: .2s;
-        }
-
-        .tres {
-            transform-origin: center right;
-            animation: spin3 3s linear infinite;
-            animation-delay: .3s;
-        }
-
-        .cuatro {
-            transform-origin: center right;
-            animation: spin4 3s linear infinite;
-            animation-delay: .4s;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            25% {
-                transform: rotate(360deg);
-            }
-
-            30% {
-                transform: rotate(370deg);
-            }
-
-            35% {
-                transform: rotate(360deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes spin2 {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            20% {
-                transform: rotate(0deg);
-            }
-
-            30% {
-                transform: rotate(-180deg);
-            }
-
-            35% {
-                transform: rotate(-190deg);
-            }
-
-            40% {
-                transform: rotate(-180deg);
-            }
-
-            78% {
-                transform: rotate(-180deg);
-            }
-
-            95% {
-                transform: rotate(-360deg);
-            }
-
-            98% {
-                transform: rotate(-370deg);
-            }
-
-            100% {
-                transform: rotate(-360deg);
-            }
-        }
-
-        @keyframes spin3 {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            27% {
-                transform: rotate(0deg);
-            }
-
-            40% {
-                transform: rotate(180deg);
-            }
-
-            45% {
-                transform: rotate(190deg);
-            }
-
-            50% {
-                transform: rotate(180deg);
-            }
-
-            62% {
-                transform: rotate(180deg);
-            }
-
-            75% {
-                transform: rotate(360deg);
-            }
-
-            80% {
-                transform: rotate(370deg);
-            }
-
-            85% {
-                transform: rotate(360deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes spin4 {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            38% {
-                transform: rotate(0deg);
-            }
-
-            60% {
-                transform: rotate(-360deg);
-            }
-
-            65% {
-                transform: rotate(-370deg);
-            }
-
-            75% {
-                transform: rotate(-360deg);
-            }
-
-            100% {
-                transform: rotate(-360deg);
-            }
-        }
-    </style>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    @media (min-width: 768px) {
+      .bd-placeholder-img-lg {
+        font-size: 3.5rem;
+      }
+    }
+  </style>
 </head>
 
-<body>
-    <div class="mask" id="loader">
-        <div class="dash uno"></div>
-        <div class="dash dos"></div>
-        <div class="dash tres"></div>
-        <div class="dash cuatro"></div>
+<body class="d-flex h-100 text-center text-white bg-dark">
+  <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+    <!-- header -->
+    <header class="mb-auto">
+      <div style="font-family: 'Changa', sans-serif;">
+        <h3 class="float-md-start mb-0">ShortYou</h3>
+        <nav class="nav nav-masthead justify-content-center float-md-end">
+          <a class="nav-link active" aria-current="page" href="https://purr.tw">URL</a>
+          <a class="nav-link" href="https://blog.purr.tw">Blog</a>
+          <a class="nav-link" href="https://github.com/HeiTang">Github</a>
+        </nav>
+      </div>
+    </header>
 
-    </div>
-    <div class="flex-center position-ref full-height">
-        <div class="content">
-            <div class="title">
-                你短短
-            </div>
-            <div class="subtitle m-b-md">
-                免主機轉址
-            </div>
-            <div class="form-group">
-                <input id="url" type="text" class="form-control" style="text-align: center;"
-                    placeholder="記得前面的 http，像是 http://www.google.com" />
-            </div>
-            <div class="form-group">
-                <input id="alias" type="text" class="form-control" style="text-align: center; display: none;"
-                    placeholder="短字串，留白為隨機。若重複將以最舊紀錄優先" />
-            </div>
-            <div class="form-group">
-                <button id="btn" class="btn btn-primary btn-block" style="display: none;">產生網址</button>
-            </div>
-            <div class="form-group">
-                <p id="result"></p>
-            </div>
+    <!-- content -->
+
+    <!-- <div class="flex-center position-ref full-height"> -->
+    <div class="flex-center full-height">
+      <div class="mask load" id="loader">
+        <div class="a" style="--n: 5">
+          <div class="dot" style="--i: 0"></div>
+          <div class="dot" style="--i: 1"></div>
+          <div class="dot" style="--i: 2"></div>
+          <div class="dot" style="--i: 3"></div>
+          <div class="dot" style="--i: 4"></div>
         </div>
-    </div>
-
-    <p style="position: absolute; left: 2em; bottom: 0.5em"
-        onclick="alert(`你好，我是 Hei\n這是一個免架設主機的轉址服務\n可讓使用者自訂字串，若重複以「最舊」紀錄優先\n若有需要可以聯繫我幫你設定\n====================\n有任何問題歡迎來信討論\ntyzescgm@gmail.com`)">
-        說明</p>
-    <p id="about" style="position: absolute; right: 2em; bottom: 0.5em">Yen-Cheng, Zhang &lt;<a
-            href="mailto:tyzescgm@gmail.com?subject=youshort">tyzescgm@gmail.com</a>&gt;</p>
-
-    <script>
-        let api = atob('aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J5SXhQbzkzQ0JIeWpWVklKeG9Id05MekpaR2FWRFZWaExYY3VyaU1lOU1zWDZ4U1FKMmRQcGtsRFZ1alpmeERJNEcvZXhlYw==');
-        let uri = window.location.href.split("#")[0];
-        let hash = window.location.href.split("#")[1];
-        let elem = document.getElementById("loader");
-        if (hash) {
-            for (let elem of document.getElementsByClassName("form-group")) {
-                elem.style.display = "none";
-            };
-            elem.style.display = "block";
-            fetch(`${api}?query=${hash}`)
-                .then(res => res.json())
-                .then(j => {
-                    window.location.href = ((j.result == "") ? uri : j.result);
-                });
-        } else {
-            elem.style.display = "none";
-        }
-
-        let btn = document.getElementById('btn');
-        let inp = document.getElementById('url');
-        let ali = document.getElementById('alias');
-        let res = document.getElementById('result');
-
-        inp.addEventListener('input', () => {
-            btn.style.display = ali.style.display = ((inp.value.startsWith("http")) ? "block" : "none");
-        });
-
-        btn.addEventListener('click', () => {
-            elem.style.display = "block";
-            $.post(api, { url: inp.value, alias: (ali.value == "" ? undefined : ali.value) }, data => { res.innerText = `${uri}#${data.result}`; elem.style.display = "none"; }, 'json');
-        });
-    </script>
+      </div>
+      <div class="content">
+          <div class="title" style="font-family: 'Indie Flower', cursive;">
+            Just Shorten It ヽ(‘ ∇‘ )ノ
+          </div>
+          <div class="subtitle m-b-md">
+            <p class="mfc-title-center" style="font-family: 'Indie Flower', cursive;">
+              <span
+                    class="txt-rotate" 
+                    data-period="1000" 
+                    data-rotate="[&quot;Too Long ? &quot;, &quot;Too Height ? &quot;, &quot;Too Fat ? &quot;, &quot;Too Ugly ? &quot;, &quot;30cm ? &quot;]">
+                <span class="wrap">You</span>
+              </span>
+              Shorten it !
+            </p>
+          </div>
+          <div class="form-group">
+              <input id="url" type="text" class="form-control inputStyle" style="text-align: center;" placeholder="Begin with 'http'" autocomplete="off"/>
+          </div>
+          <div class="form-group">
+              <input id="alias" type="text" class="form-control inputStyle" style="text-align: center; display: none;" placeholder="Customize link (Select)" autocomplete="off"/>
+          </div>
+          <div class="form-group">
+              <button id="btn" class="btn btn-primary btn-block" style="display: none;">Shorten URL</button>
+          </div>
+          <div class="form-group">
+              <p id="result"></p>
+          </div>
+      </div>
+  </div>
+    
+    <!-- footer -->
+    <footer class="mt-auto text-white-50">
+      <p>Copyright © 2021 <a href="https://github.com/HeiTang" class="text-white">Heitang512</a>. All rights reserved.</p>
+    </footer>
+  </div>
+  <script src="javascript/main.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 </body>
-
 </html>
+

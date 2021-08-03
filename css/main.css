@@ -99,7 +99,7 @@ body {
     }
 }
 
-@media(max-width:480px){
+@media(max-width:710px){
     .hide-in-mobile {
         display: none;
     }

@@ -10,6 +10,9 @@
   <a href="https://github.com/HeiTang/ShortYou">
     <img src="https://img.shields.io/github/stars/HeiTang/ShortYou?color=ff69b4">
   </a>
+  <a href="https://purr.tw">
+    <img src="https://d86qi232nfco.runkit.sh">
+  </a>
   <br><br>
   <img src="https://readme-typing-svg.herokuapp.com?font=Changa&color=00F71A&size=30&center=true&vCenter=true&height=60&lines=Too+Long%3F+Shorten+it!;Too+Height%3F++Shorten+it!;Too+Fat%3F++Shorten+it!;30cm%3F++Shorten+it!">
   <img src="https://raw.githubusercontent.com/HeiTang/ShortYou/main/demo/page.png">
@@ -30,9 +33,25 @@
 
 ## Usage
 
-1. Enter the link you wish to shorten. The link must begin with `http` or `https` .
+1. Visit the website - [ShortYou](https://purr.tw)
 
-2. You can customize link by yourself or blanking.
+2. Enter the link you wish to shorten. The link must begin with `http` or `https` .
+
+    ```
+    Example: https://github.com/HeiTang/ShortYou
+    ```
+
+3. You can customize link by yourself or blanking.
+
+    ```
+    Example: ShortYou
+    ```
+
+4. Click "Short URL". Later, You will see the result.
+
+    ```
+    Example: https://purr.tw/#ShortYou
+    ```
 
 ## Todo
 

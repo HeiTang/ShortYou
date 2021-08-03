@@ -99,6 +99,14 @@ body {
     }
 }
 
+@media(max-width:480px){
+    .hide-in-mobile {
+        display: none;
+    }
+}
+
+    
+
 .mask {
     position: absolute;
     top: 0px;

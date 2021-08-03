@@ -11,7 +11,7 @@
     <img src="https://img.shields.io/github/stars/HeiTang/ShortYou?color=ff69b4">
   </a>
   <a href="https://purr.tw">
-    <img src="https://d86qi232nfco.runkit.sh">
+    <img src="https://f1qe4wyq4m9j.runkit.sh">
   </a>
   <br><br>
   <img src="https://readme-typing-svg.herokuapp.com?font=Changa&color=00F71A&size=30&center=true&vCenter=true&height=60&lines=Too+Long%3F+Shorten+it!;Too+Height%3F++Shorten+it!;Too+Fat%3F++Shorten+it!;30cm%3F++Shorten+it!">

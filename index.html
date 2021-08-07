@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="zh-TW" class="h-100">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,20 +13,6 @@
   <link href="css/cover.css" rel="stylesheet">
   <link href="css/main.css" rel="stylesheet">
   <link href="css/load.css" rel="stylesheet">
-
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MRVS2ZGFXF"></script>
-  <!-- Google reCAPTCHA  -->
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-  
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-MRVS2ZGFXF');
-  </script>
-  
   <style>
     .bd-placeholder-img {
       font-size: 1.125rem;
@@ -71,54 +58,62 @@
         </div>
       </div>
       <div class="content">
-          <div class="title hide-in-mobile" style="font-family: 'Indie Flower', cursive;">
-            Just Shorten It ヽ(‘ ∇‘ )ノ
+        <div class="title hide-in-mobile" style="font-family: 'Indie Flower', cursive;">
+          Just Shorten It ヽ(‘ ∇‘ )ノ
+        </div>
+        <div class="subtitle m-b-md">
+          <p class="mfc-title-center" style="font-family: 'Indie Flower', cursive;">
+            <span class="txt-rotate hide-in-mobile" data-period="1000"
+              data-rotate="[&quot;Too Long ? &quot;, &quot;Too Height ? &quot;, &quot;Too Fat ? &quot;, &quot;Too Ugly ? &quot;, &quot;30cm ? &quot;]">
+              <span class="wrap">You</span>
+            </span>
+            Shorten it !
+          </p>
+        </div>
+        <div class="form-group">
+          <input id="url" type="text" class="form-control inputStyle" style="text-align: center;"
+            placeholder="Begin with 'http'" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <input id="alias" type="text" class="form-control inputStyle" style="text-align: center; display: none;"
+            placeholder="Customize link (Select)" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <div id="recaptcha" style="display: none;" class="g-recaptcha"
+            data-sitekey="6Lfj9-UbAAAAAJwP01RGsOE8h1R91m4yh5AqdU6e" data-theme="dark" data-size="normal"
+            data-callback="verifyCallback">
           </div>
-          <div class="subtitle m-b-md">
-            <p class="mfc-title-center" style="font-family: 'Indie Flower', cursive;">
-              <span
-                    class="txt-rotate hide-in-mobile" 
-                    data-period="1000" 
-                    data-rotate="[&quot;Too Long ? &quot;, &quot;Too Height ? &quot;, &quot;Too Fat ? &quot;, &quot;Too Ugly ? &quot;, &quot;30cm ? &quot;]">
-                <span class="wrap">You</span>
-              </span>
-              Shorten it !
-            </p>
-          </div>
-          <div class="form-group">
-              <input id="url" type="text" class="form-control inputStyle" style="text-align: center;" placeholder="Begin with 'http'" autocomplete="off"/>
-          </div>
-          <div class="form-group">
-              <input id="alias" type="text" class="form-control inputStyle" style="text-align: center; display: none;" placeholder="Customize link (Select)" autocomplete="off"/>
-          </div>
-          <div class="form-group">
-            <div
-              id="recaptcha"
-              style="display: none;"
-              class="g-recaptcha"
-              data-sitekey="6Lfj9-UbAAAAAJwP01RGsOE8h1R91m4yh5AqdU6e"
-              data-theme="dark" 
-              data-size="normal"
-              data-callback="verifyCallback">
-            </div>
-          </div>
-          <div class="form-group">
-            <button id="btn" class="btn btn-primary btn-block none">Shorten URL</button>
-          </div>
-          <div class="form-group">
-              <p id="result"></p>
-          </div>
+        </div>
+        <div class="form-group">
+          <button id="btn" class="btn btn-primary btn-block none">Shorten URL</button>
+        </div>
+        <div class="form-group">
+          <p id="result"></p>
+        </div>
       </div>
-  </div>
-    
+    </div>
+
     <!-- footer -->
     <footer class="mt-auto text-white-50">
-      <p class="text">Copyright © 2021 <a href="https://github.com/HeiTang" class="text-white">Heitang512</a>. All rights reserved.</p>
+      <p class="text">Copyright © 2021 <a href="https://github.com/HeiTang" class="text-white">Heitang512</a>. All
+        rights reserved.</p>
     </footer>
   </div>
+
   <script src="javascript/main.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-</body>
-</html>
+  <!-- Google reCAPTCHA  -->
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-S5PPZHQ0HJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
 
+    gtag('config', 'G-S5PPZHQ0HJ');
+  </script>
+</body>
+
+</html>

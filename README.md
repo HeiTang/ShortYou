@@ -55,11 +55,11 @@
 
 ## Todo
 
-- [ ] reCAPTCHA 
+- [x] reCAPTCHA 
 
 - [ ] QR Code
 
-- [ ] Record IP
+- [x] Record IP
 
 - [ ] Refactor Random Generator
 

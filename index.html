@@ -13,8 +13,11 @@
   <link href="css/main.css" rel="stylesheet">
   <link href="css/load.css" rel="stylesheet">
 
-  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-MRVS2ZGFXF"></script>
+  <!-- Google reCAPTCHA  -->
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
@@ -89,7 +92,18 @@
               <input id="alias" type="text" class="form-control inputStyle" style="text-align: center; display: none;" placeholder="Customize link (Select)" autocomplete="off"/>
           </div>
           <div class="form-group">
-              <button id="btn" class="btn btn-primary btn-block" style="display: none;">Shorten URL</button>
+            <div
+              id="recaptcha"
+              style="display: none;"
+              class="g-recaptcha"
+              data-sitekey="6Lfj9-UbAAAAAJwP01RGsOE8h1R91m4yh5AqdU6e"
+              data-theme="dark" 
+              data-size="normal"
+              data-callback="verifyCallback">
+            </div>
+          </div>
+          <div class="form-group">
+            <button id="btn" class="btn btn-primary btn-block none">Shorten URL</button>
           </div>
           <div class="form-group">
               <p id="result"></p>

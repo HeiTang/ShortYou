@@ -10,6 +10,10 @@ body {
     margin: 0;
 }
 
+.none {
+    display: none !important;
+}
+
 .full-height {
     height: 80vh;
 }

@@ -58,7 +58,7 @@ function verifyCallback(token) {
     formData.append('ip', ip);
 
     // Google Apps Script 部署為網路應用程式後取得的 URL
-    var uriGAS = "https://script.google.com/macros/s/AKfycbymUjNyL3y34V1P1eAAS0Nli3jV7JxlLR-QYE-eKoXLMbKI3tTAHO4RI91vtyGD3Nke/exec";
+    var uriGAS = "https://script.google.com/macros/s/AKfycbw2IvOrdgOw0CgozDcyLZqnqqwYyWEpIb_bl_clW5I97LYlgRQR8yWZ6MJ3VqoE86dWRg/exec";
 
     fetch(uriGAS, {
         method: "POST",

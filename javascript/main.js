@@ -1,4 +1,4 @@
-let api = atob('aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J5SXhQbzkzQ0JIeWpWVklKeG9Id05MekpaR2FWRFZWaExYY3VyaU1lOU1zWDZ4U1FKMmRQcGtsRFZ1alpmeERJNEcvZXhlYw==');
+let api = atob('aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J6X2JXbW1LWWJmb0xjTmEzeWttUG9weUc5dmFEWTZkMWRtc2R4WHY3U0VRVF9vTFhETlEwZE5xb2NlQlVvbGpvNUkvZXhlYw==');
 let uri = window.location.href.split("#")[0];
 let hash = window.location.href.split("#")[1];
 let elem = document.getElementById("loader");

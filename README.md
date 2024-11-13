@@ -10,7 +10,7 @@
   <a href="https://github.com/HeiTang/ShortYou">
     <img src="https://img.shields.io/github/stars/HeiTang/ShortYou?color=ff69b4">
   </a>
-  <a href="https://purr.tw">
+  <a href="https://t.purr.tw">
     <img src="https://f1qe4wyq4m9j.runkit.sh">
   </a>
   <br><br>
@@ -33,7 +33,7 @@
 
 ## Usage
 
-1. Visit the website - [ShortYou](https://purr.tw)
+1. Visit the website - [ShortYou](https://t.purr.tw)
 
 2. Enter the link you wish to shorten. The link must begin with `http` or `https` .
 
@@ -50,7 +50,7 @@
 4. Click "Short URL". Later, You will see the result.
 
     ```
-    Example: https://purr.tw/#ShortYou
+    Example: https://t.purr.tw/#ShortYou
     ```
 
 ## Todo

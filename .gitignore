@@ -1,4 +1,6 @@
 **/.DS_Store
 **/.git
 **/__pycache__
-
+**/.clasprc.json
+**/.clasp.json
+**/node_modules

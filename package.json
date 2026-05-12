@@ -1,0 +1,14 @@
+{
+  "name": "shortyou",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ShortYou GAS backend build pipeline",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "check:gas": "node --check gas/Code.js && test -f gas/appsscript.json"
+  },
+  "devDependencies": {
+    "@types/google-apps-script": "^2.0.8",
+    "typescript": "^5.9.3"
+  }
+}

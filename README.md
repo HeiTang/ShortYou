@@ -59,8 +59,9 @@
 
 ## Google Apps Script Backend (clasp + TypeScript)
 
-- TypeScript source: `gas/src/*.ts` (entrypoint: `gas/src/Code.ts`)
+- TypeScript source: `gas/src/*.ts` (entrypoint: `gas/src/entrypoints.ts`)
 - Generated runtime file: `gas/Code.js`
+- `gas/Code.js` is generated during build/deploy and is not tracked in Git.
 - Build command: `npm run build:gas`
 - Code review target: **`gas/src/*.ts`** (`gas/Code.js` is generated artifact, do not edit manually)
 

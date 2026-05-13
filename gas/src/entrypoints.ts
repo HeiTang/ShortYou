@@ -2,13 +2,13 @@
  * GAS backend entrypoint composition.
  *
  * Source layout (SOLID/DRY split):
- * - 00-types.ts: shared types/errors
- * - 10-config.ts: AppConfig
- * - 20-utils.ts: normalizer/date/hash/random helpers
- * - 30-repository.ts: Sheets DAL
- * - 40-services.ts: domain/application services
- * - 50-controller.ts: HTTP controller
- * - Code.ts: bootstrap + GAS global entrypoints + admin wrappers
+ * - types.ts: shared types/errors
+ * - config.ts: AppConfig
+ * - utils.ts: normalizer/date/hash/random helpers
+ * - repository.ts: Sheets DAL
+ * - services.ts: domain/application services
+ * - controller.ts: HTTP controller
+ * - entrypoints.ts: bootstrap + GAS global entrypoints + admin wrappers
  *
  * Build note:
  * TypeScript compiles all gas/src/*.ts into a single generated gas/Code.js via outFile.

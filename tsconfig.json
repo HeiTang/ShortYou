@@ -8,5 +8,13 @@
     "outFile": "gas/Code.js",
     "removeComments": false
   },
-  "include": ["gas/src/**/*.ts"]
+  "files": [
+    "gas/src/types.ts",
+    "gas/src/config.ts",
+    "gas/src/utils.ts",
+    "gas/src/repository.ts",
+    "gas/src/services.ts",
+    "gas/src/controller.ts",
+    "gas/src/entrypoints.ts"
+  ]
 }

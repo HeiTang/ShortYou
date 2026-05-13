@@ -15,7 +15,7 @@
   </a>
   <br><br>
   <img src="https://readme-typing-svg.herokuapp.com?font=Changa&color=00F71A&size=30&center=true&vCenter=true&height=60&lines=Too+Long%3F+Shorten+it!;Too+Height%3F++Shorten+it!;Too+Fat%3F++Shorten+it!;30cm%3F++Shorten+it!">
-  <img src="https://raw.githubusercontent.com/HeiTang/ShortYou/main/demo/page.png">
+  <img src="./docs/demo/page.png">
   <p>- - -</p>
   <p><i>“ ShortYou is a URL Shortener. ”</i></p>
   <p>ShortYou can shorten the lengthy URL and easy to share link with other people.</p>

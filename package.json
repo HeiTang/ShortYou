@@ -4,8 +4,9 @@
   "version": "1.0.0",
   "description": "ShortYou frontend and GAS backend pipeline",
   "scripts": {
-    "build": "tsc --project tsconfig.json",
-    "build:gas": "tsc --project tsconfig.json",
+    "build": "npm run build:gas",
+    "build:gas": "tsc --project tsconfig.gas.json && node scripts/build-gas.mjs",
+    "typecheck:gas": "tsc --noEmit --project tsconfig.gas.json",
     "check:gas": "node --check gas/Code.js && test -f gas/appsscript.json",
     "dev:frontend": "astro dev",
     "build:frontend": "astro build",

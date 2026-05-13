@@ -1,20 +1,4 @@
 {
-  "compilerOptions": {
-    "target": "ES2019",
-    "lib": ["ES2019", "DOM"],
-    "module": "none",
-    "strict": true,
-    "skipLibCheck": true,
-    "outFile": "gas/Code.js",
-    "removeComments": false
-  },
-  "files": [
-    "gas/src/types.ts",
-    "gas/src/config.ts",
-    "gas/src/utils.ts",
-    "gas/src/repository.ts",
-    "gas/src/services.ts",
-    "gas/src/controller.ts",
-    "gas/src/entrypoints.ts"
-  ]
+  "extends": "astro/tsconfigs/strict",
+  "exclude": ["dist", "gas", "node_modules"]
 }

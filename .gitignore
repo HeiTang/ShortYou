@@ -6,4 +6,5 @@
 **/node_modules
 **/.astro
 **/dist
+/.gas-build
 /gas/Code.js

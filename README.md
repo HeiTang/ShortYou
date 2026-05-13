@@ -33,120 +33,160 @@
 
 ## Usage
 
-1. Visit the website - [ShortYou](https://t.purr.tw)
+1. Open homepage: [ShortYou](https://t.purr.tw/)
+2. Public redirect: `https://t.purr.tw/#<alias>`
+3. Homepage playground (unauthorized): generate fake links for demo only
+4. Invite page (authorized create): `https://t.purr.tw/invite`
+5. Capability create mode: `https://t.purr.tw/invite#t=<capabilityToken>`
 
-2. Enter the link you wish to shorten. The link must begin with `http` or `https` .
+## Frontend (Astro + Tailwind + GitHub Pages)
 
-    ```
-    Example: https://github.com/HeiTang/ShortYou
-    ```
+- Source: `src/pages/index.astro`
+- Build: `npm run build:frontend`
+- Output: `dist/`
+- Deploy workflow: `.github/workflows/pages.yml`
 
-3. You can customize link by yourself or blanking.
+### Frontend behavior
 
-    ```
-    Example: ShortYou
-    ```
+- Homepage (`/`):
+  - `#alias` → query backend and redirect
+  - no hash → fake short-link playground (stored in localStorage)
+- Invite page (`/invite`):
+  - exchange invite code
+  - `#t=<token>` → authorized create mode
+- Token hash is removed from URL via `history.replaceState` after page loads create mode.
+- No jQuery dependency.
 
-4. Click "Short URL". Later, You will see the result.
+## Google Apps Script Backend (clasp + TypeScript)
 
-    ```
-    Example: https://t.purr.tw/#ShortYou
-    ```
+- TypeScript source: `gas/src/*.ts` (entrypoint: `gas/src/Code.ts`)
+- Generated runtime file: `gas/Code.js`
+- Build command: `npm run build:gas`
+- Code review target: **`gas/src/*.ts`** (`gas/Code.js` is generated artifact, do not edit manually)
 
-## Google Apps Script Backend (clasp)
+### Deploy
 
-Backend source code is now under `gas/`.
-
-- TypeScript source: `gas/src/Code.ts`
-- Generated deployment file: `gas/Code.js`
-
-1. Install clasp and login.
+1. Install dependencies and build:
 
     ```bash
     npm install
-    npm run build
+    npm run build:gas
+    ```
+
+2. Login clasp:
+
+    ```bash
     npm i -g @google/clasp
     clasp login
     ```
 
-2. Create `gas/.clasp.json` from the example, then fill your `scriptId`.
+3. Create `gas/.clasp.json` and set `scriptId`:
 
     ```bash
     cp gas/.clasp.json.example gas/.clasp.json
     ```
 
-3. Push source to GAS.
+4. Push and deploy:
 
     ```bash
     cd gas
     clasp push
-    ```
-
-4. Set Script Properties in Apps Script:
-
-    - `RECAPTCHA_SECRET`: your reCAPTCHA secret key
-    - `ENFORCE_CAPTCHA`: `true` or `false` (recommended: `true`)
-    - `ENFORCE_ACCESS_CONTROL`: `true` or `false` (recommended: `true`)
-    - `CLIENTS_SHEET_NAME`: allowlist sheet name (default: `clients`)
-    - `SHORT_SHEET_NAME`: short url sheet name (default: `short`)
-    - `RANDOM_ALIAS_INITIAL_LENGTH`: default random alias length start (default: `6`)
-    - `RANDOM_ALIAS_MAX_LENGTH`: max random alias length (default: `12`)
-    - `RANDOM_ALIAS_TRY_PER_LENGTH`: retries per alias length (default: `12`)
-    - `RESERVED_ALIASES`: comma-separated reserved aliases (optional)
-
-5. Create allowlist client credentials in Apps Script editor:
-
-    ```javascript
-    // Save/update client (apiKey will be hashed with SHA-256)
-    upsertClient('alice', 'YOUR_API_KEY', 'active', 'Alice account');
-
-    // Disable client
-    disableClient('alice');
-
-    // Rotate key
-    rotateClientKey('alice', 'NEW_API_KEY');
-    ```
-
-6. Deploy web app:
-
-    ```bash
     clasp deploy --description "shortyou-backend"
     ```
 
+### Script Properties
+
+- `RECAPTCHA_SECRET`
+- `ENFORCE_CAPTCHA` (`true` / `false`)
+- `ENFORCE_ACCESS_CONTROL` (`true` / `false`)
+- `PUBLIC_SITE_URL` (default: `https://t.purr.tw`)
+- `INVITE_PAGE_PATH` (default: `/invite`)
+- `SHORT_LINKS_SHEET_NAME` (default: `short_links`)
+- `CLIENTS_SHEET_NAME` (default: `clients`)
+- `INVITES_SHEET_NAME` (default: `invites`)
+- `AUDIT_LOGS_SHEET_NAME` (default: `audit_logs`)
+- `DEFAULT_DAILY_QUOTA` (default: `0`, means unlimited)
+- `RESERVED_ALIASES` (comma-separated)
+
+### Google Sheets schema
+
+1. `short_links`
+   - `alias`, `url`, `clicks`, `created_by_client`, `status`, `created_at`, `updated_at`, `last_access_at`
+2. `clients`
+   - `client_code`, `owner_name`, `status`, `capability_token_hash`, `token_hint`, `issued_at`, `expires_at`, `daily_quota`, `daily_used`, `quota_reset_at`, `last_used_at`, `note`
+3. `invites`
+   - `invite_code_hash`, `status`, `max_uses`, `used_count`, `expires_at`, `issued_by`, `issued_to_hint`, `created_at`, `last_used_at`, `note`
+4. `audit_logs`
+   - `time`, `event`, `client_code`, `ip`, `result`, `reason`
+
+### API actions
+
+- `POST action=verify_captcha`
+- `POST action=exchange_invite`
+- `POST action=create` (default if `url` exists)
+- `GET ?query=<alias>` for redirect lookup
+
+### Invite and capability workflow
+
+1. Admin generates invite code:
+
+    ```javascript
+    createInvite(1, '', 'admin', 'alice', 'one-time invite');
+    ```
+
+2. User exchanges invite code:
+
+    ```bash
+    curl -X POST "$GAS_WEBAPP_URL" \
+      -d "action=exchange_invite" \
+      -d "inviteCode=YOUR_INVITE_CODE"
+    ```
+
+3. Backend returns dedicated create link:
+
+    ```text
+    https://t.purr.tw/invite#t=<capabilityToken>
+    ```
+
+4. User creates short URL with capability token:
+
+    ```bash
+    curl -X POST "$GAS_WEBAPP_URL" \
+      -d "action=create" \
+      -d "url=https://github.com/HeiTang/ShortYou" \
+      -d "alias=shortyou" \
+      -d "token=RECAPTCHA_TOKEN" \
+      -d "ip=1.2.3.4" \
+      -d "capabilityToken=CAPABILITY_TOKEN"
+    ```
+
+### Admin helper functions (GAS editor)
+
+```javascript
+ensureDatabaseSchema();
+createInvite(1, '', 'admin', 'alice', 'invite for alice');
+disableInvite('INVITE_CODE');
+disableClient('c_xxxxxxx');
+rotateCapabilityToken('c_xxxxxxx');
+```
+
 ## CI/CD (GitHub Actions)
 
-Workflow file: `.github/workflows/gas-cicd.yml`
+- Backend GAS pipeline: `.github/workflows/gas-cicd.yml`
+- Frontend Pages pipeline: `.github/workflows/pages.yml`
 
-- PR / push: validate GAS source
-- main branch push: auto push + deploy GAS
+Required secrets for GAS deploy:
 
-Required GitHub Secrets:
+- `CLASPRC_JSON`
+- `GAS_SCRIPT_ID`
+- `GAS_DEPLOYMENT_ID` (optional)
 
-- `CLASPRC_JSON`: content of local `~/.clasprc.json`
-- `GAS_SCRIPT_ID`: Apps Script project ID
-- `GAS_DEPLOYMENT_ID` (optional): existing deployment ID (if set, workflow updates that deployment)
+## Security baseline
 
-## Security Baseline
-
-- Backend now defaults `ENFORCE_CAPTCHA=true` when property is missing.
-- Backend now defaults `ENFORCE_ACCESS_CONTROL=true` when property is missing.
-- Frontend sends `token + ip` together with URL create request.
-- URL create API now requires `clientId + apiKey` (per-user credentials) when access control is enabled.
-- URL validation blocks non-http(s), overlong URLs, and Sheets formula injection prefixes.
-- Custom alias is normalized to lowercase and returns `alias_exists` when collision occurs.
-- Keep `RECAPTCHA_SECRET` only in Script Properties (never commit into repo).
-
-### Create API payload example
-
-```bash
-curl -X POST "$GAS_WEBAPP_URL" \
-  -d "url=https://github.com/HeiTang/ShortYou" \
-  -d "alias=shortyou" \
-  -d "token=RECAPTCHA_TOKEN" \
-  -d "ip=1.2.3.4" \
-  -d "clientId=alice" \
-  -d "apiKey=YOUR_API_KEY"
-```
+- Only homepage is intended for indexing.
+- Capability token is only used for create API authorization.
+- Token is stored hashed in Sheets (`sha256`) and cannot be recovered.
+- Access control is "anti-abuse oriented", not strict identity authentication.
 
 ## Todo
 

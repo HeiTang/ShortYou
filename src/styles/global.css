@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Changa:wght@500;700&family=Indie+Flower&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-zinc-900 text-slate-100;
+}
+
+.txt-rotate {
+  border-right: 0.08em solid #666;
+  padding-right: 2px;
+}
+
+.brand-font {
+  font-family: 'Changa', sans-serif;
+}
+
+.title-font {
+  font-family: 'Indie Flower', cursive;
+}
+
+.flat-input {
+  @apply rounded-md border border-slate-600 bg-zinc-800/80 px-4 py-2.5 text-[15px] text-slate-100 caret-slate-200 outline-none transition-colors placeholder:text-slate-500 hover:border-slate-500 focus:border-slate-300 focus:bg-zinc-800 focus:ring-1 focus:ring-slate-400/40;
+}
+
+.url-row {
+  @apply relative;
+}
+
+.url-input {
+  @apply w-full pr-36;
+}
+
+.url-actions {
+  @apply absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1;
+}
+
+.invite-row {
+  @apply flex items-stretch gap-2;
+}
+
+.invite-input-wrap {
+  @apply relative flex-1;
+}
+
+.invite-code-input {
+  @apply w-full px-12 text-center;
+}
+
+.input-help {
+  @apply absolute right-3 top-1/2 -translate-y-1/2;
+}
+
+.input-help-icon {
+  @apply inline-flex h-5 w-5 items-center justify-center rounded-full bg-transparent text-slate-500 transition-colors hover:text-slate-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-500/50;
+}
+
+.input-help-tip {
+  @apply pointer-events-none absolute right-0 top-7 z-20 w-64 rounded-md border border-slate-700 bg-zinc-900 px-2.5 py-2 text-left text-xs text-slate-200 opacity-0 shadow-lg transition;
+}
+
+.input-help:hover .input-help-tip,
+.input-help:focus-within .input-help-tip {
+  @apply opacity-100;
+}
+
+.icon-btn {
+  @apply inline-flex h-9 w-9 items-center justify-center rounded-md bg-transparent text-slate-400 transition-colors hover:text-slate-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-500/50 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.alias-shell {
+  @apply flex h-full items-center rounded-md border border-slate-600 bg-zinc-800/80 transition-all duration-150 focus-within:border-slate-300 focus-within:ring-1 focus-within:ring-slate-400/40;
+}
+
+.alias-shell.is-disabled {
+  @apply opacity-50;
+}
+
+.alias-prefix {
+  @apply shrink-0 border-r border-slate-700 px-3 text-sm text-slate-500;
+}
+
+.alias-input {
+  @apply w-full bg-transparent px-3 py-2.5 text-[15px] text-slate-100 outline-none placeholder:text-slate-500;
+}
+
+.alias-panel {
+  @apply overflow-hidden transition-[height] duration-150;
+}
+
+.alias-panel.is-collapsed {
+  @apply h-0;
+}
+
+.alias-panel.is-open {
+  @apply h-[44px];
+}
+
+.alias-panel.is-collapsed .alias-shell {
+  @apply pointer-events-none opacity-0;
+}
+
+.alias-panel.is-open .alias-shell {
+  @apply opacity-100;
+}
+
+.flat-btn {
+  @apply shrink-0 rounded-md border border-blue-400 bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.flat-btn-inline {
+  @apply h-9 px-3 py-0 text-xs;
+}
+
+.invite-exchange-btn {
+  @apply h-[44px] border-orange-400 bg-orange-500 px-4 py-0 text-sm font-bold text-zinc-950 hover:bg-orange-400;
+}
+
+.field-error {
+  @apply text-left text-xs text-rose-300;
+}
+
+.input-error {
+  @apply border-rose-500 focus:border-rose-400 focus:ring-rose-400/40;
+}
+
+.toast {
+  @apply pointer-events-none fixed right-4 top-4 z-50 max-w-xs rounded-md border px-3 py-2 text-sm opacity-0 shadow-lg transition;
+}
+
+.toast.show {
+  @apply opacity-100;
+}
+
+.toast.success {
+  @apply border-emerald-500 bg-emerald-500/15 text-emerald-100;
+}
+
+.toast.error {
+  @apply border-rose-500 bg-rose-500/15 text-rose-100;
+}
+
+.toast.warn {
+  @apply border-amber-500 bg-amber-500/15 text-amber-100;
+}

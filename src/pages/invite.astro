@@ -1,0 +1,372 @@
+---
+import '../styles/global.css';
+---
+
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShortYou Invite ฅ•ω•ฅ</title>
+    <meta name="description" content="ShortYou invite mode for authorized short-url creation." />
+    <meta name="robots" content="noindex,nofollow,noarchive" />
+    <link rel="canonical" href="https://t.purr.tw/" />
+    <link rel="icon" href="/img/favicon.ico" />
+  </head>
+  <body class="min-h-screen bg-zinc-900 text-slate-100">
+    <main class="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-5">
+      <header class="mb-auto flex items-center justify-between gap-2">
+        <h3 class="brand-font shrink-0 text-xl leading-none sm:text-2xl">ShortYou</h3>
+        <nav class="flex items-center gap-2 whitespace-nowrap text-[11px] text-slate-300 sm:gap-4 sm:text-sm">
+          <a href="/" class="transition hover:text-white">URL</a>
+          <a href="/invite" class="text-white">Invite</a>
+          <a href="https://github.com/HeiTang" target="_blank" rel="noreferrer" aria-label="GitHub" class="inline-flex items-center transition hover:text-white">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-4 w-4">
+              <path d="M12 .5C5.65.5.5 5.73.5 12.18c0 5.16 3.3 9.53 7.88 11.08.58.11.79-.26.79-.57 0-.28-.01-1.04-.02-2.04-3.2.71-3.88-1.57-3.88-1.57-.52-1.36-1.28-1.72-1.28-1.72-1.04-.73.08-.72.08-.72 1.15.08 1.75 1.2 1.75 1.2 1.02 1.77 2.68 1.26 3.33.97.1-.75.4-1.26.72-1.55-2.56-.3-5.25-1.3-5.25-5.79 0-1.28.45-2.33 1.18-3.16-.12-.3-.51-1.51.11-3.14 0 0 .97-.32 3.17 1.21a10.8 10.8 0 0 1 5.77 0c2.19-1.53 3.16-1.21 3.16-1.21.63 1.63.24 2.84.12 3.14.73.83 1.17 1.88 1.17 3.16 0 4.5-2.7 5.49-5.28 5.79.41.36.77 1.08.77 2.17 0 1.57-.01 2.83-.01 3.22 0 .31.2.69.8.57a11.72 11.72 0 0 0 7.87-11.08C23.5 5.73 18.35.5 12 .5Z"></path>
+            </svg>
+          </a>
+        </nav>
+      </header>
+
+      <section id="invitePanel" class="mx-auto my-8 w-full max-w-xl text-center">
+        <h1 class="title-font mb-12 text-6xl leading-none md:text-8xl">
+          Just&nbsp;Shorten&nbsp;It
+          <span class="block">ヽ(‘ ∇‘ )ノ</span>
+        </h1>
+        <div class="space-y-3">
+          <div class="invite-row">
+            <div class="invite-input-wrap">
+              <input
+                id="inviteCode"
+                type="text"
+                placeholder="Enter invite code"
+                aria-label="Invite code"
+                autocomplete="off"
+                class="flat-input invite-code-input"
+              />
+              <div class="input-help">
+                <button
+                  type="button"
+                  class="input-help-icon"
+                  aria-label="How to get Invite Code"
+                  aria-describedby="inviteHelpTip"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M9.8 9.3a2.5 2.5 0 1 1 3.4 2.3c-1 .4-1.7 1.2-1.7 2.3v.4"></path>
+                    <circle cx="12" cy="17.4" r=".6" fill="currentColor" stroke="none"></circle>
+                  </svg>
+                </button>
+                <div id="inviteHelpTip" class="input-help-tip" role="note">
+                  請向管理者索取 Invite Link，開啟連結後即可取得 Invite Code。
+                </div>
+              </div>
+            </div>
+            <button id="exchangeBtn" class="flat-btn invite-exchange-btn hidden whitespace-nowrap" disabled>
+              Apply
+            </button>
+          </div>
+          <p id="inviteCodeError" class="field-error hidden"></p>
+          <p id="exchangeResult" class="mt-3 break-all text-sm text-cyan-300"></p>
+        </div>
+      </section>
+
+      <section id="createPanel" class="mx-auto mt-7 hidden w-full max-w-xl text-center">
+        <h2 class="mb-2 text-3xl font-bold">Authorized Create Mode</h2>
+        <p class="mb-5 text-sm text-slate-300">Create real short links with your token.</p>
+
+        <div class="space-y-3">
+          <div class="url-row">
+            <input
+              id="url"
+              type="text"
+              placeholder="https://purr.tw"
+              aria-label="Target URL"
+              autocomplete="off"
+              class="flat-input url-input"
+            />
+            <div class="url-actions">
+              <button
+                id="aliasToggle"
+                type="button"
+                class="icon-btn"
+                aria-label="Toggle custom alias"
+                aria-controls="aliasPanel"
+                aria-expanded="false"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                  <circle cx="12" cy="12" r="3.2"></circle>
+                  <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 0 1 0 2.8 2 2 0 0 1-2.8 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 0 1-4 0v-.2a1 1 0 0 0-.7-.9 1 1 0 0 0-1 .2l-.2.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 0 1 0-4h.2a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1l-.1-.2a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 0 1 4 0v.2a1 1 0 0 0 .7.9 1 1 0 0 0 1-.2l.2-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a2 2 0 0 1 0 4h-.2a1 1 0 0 0-.9.7z"></path>
+                </svg>
+              </button>
+              <button id="createBtn" class="flat-btn flat-btn-inline hidden" disabled>Shorten</button>
+            </div>
+          </div>
+          <div id="aliasPanel" class="alias-panel is-collapsed">
+            <div id="aliasWrap" class="alias-shell is-disabled">
+              <span class="alias-prefix">#</span>
+              <input
+                id="alias"
+                type="text"
+                placeholder="Customize link (optional)"
+                aria-label="Custom alias"
+                autocomplete="off"
+                class="alias-input"
+              />
+            </div>
+          </div>
+
+          <div id="recaptcha" class="hidden"></div>
+          <p id="result" class="mt-3 break-all text-sm text-cyan-300"></p>
+        </div>
+      </section>
+
+      <footer class="mt-auto text-center text-xs text-slate-400">
+        Copyright © <span data-current-year></span> <a href="https://github.com/HeiTang" class="underline underline-offset-2">黑糖不是炭</a>. All rights reserved.
+      </footer>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script>
+      window.__SHORTYOU_CONFIG__ = {
+        api: atob('aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J6X2JXbW1LWWJmb0xjTmEzeWttUG9weUc5dmFEWTZkMWRtc2R4WHY3U0VRVF9vTFhETlEwZE5xb2NlQlVvbGpvNUkvZXhlYw=='),
+        recaptchaSiteKey: '6Lfj9-UbAAAAAJwP01RGsOE8h1R91m4yh5AqdU6e'
+      };
+    </script>
+    <script type="module">
+      const config = window.__SHORTYOU_CONFIG__;
+      const api = config.api;
+      const recaptchaSiteKey = config.recaptchaSiteKey;
+      const pageBase = `${window.location.origin}/`;
+      const yearNode = document.querySelector('[data-current-year]');
+      if (yearNode) yearNode.textContent = String(new Date().getFullYear());
+
+      const invitePanel = document.getElementById('invitePanel');
+      const createPanel = document.getElementById('createPanel');
+      const inviteCodeInput = document.getElementById('inviteCode');
+      const inviteCodeError = document.getElementById('inviteCodeError');
+      const exchangeBtn = document.getElementById('exchangeBtn');
+      const exchangeResult = document.getElementById('exchangeResult');
+      const inp = document.getElementById('url');
+      const ali = document.getElementById('alias');
+      const aliasToggle = document.getElementById('aliasToggle');
+      const aliasPanel = document.getElementById('aliasPanel');
+      const aliasWrap = document.getElementById('aliasWrap');
+      const recaptchaWrap = document.getElementById('recaptcha');
+      const createBtn = document.getElementById('createBtn');
+      const resultNode = document.getElementById('result');
+      const toast = document.getElementById('toast');
+
+      let capabilityToken = '';
+      let recaptchaToken = '';
+      let captchaVerified = false;
+      let aliasOpen = false;
+      let ip = '';
+      let toastTimer;
+
+      const showToast = (text, type = 'warn') => {
+        if (!text) {
+          toast.classList.remove('show', 'success', 'error', 'warn');
+          toast.textContent = '';
+          return;
+        }
+        toast.classList.remove('success', 'error', 'warn');
+        toast.classList.add(type === 'error' ? 'error' : type === 'success' ? 'success' : 'warn', 'show');
+        toast.textContent = text;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.classList.remove('show');
+        }, 2600);
+      };
+
+      const setInviteCodeError = (text = '') => {
+        inviteCodeError.textContent = text;
+        inviteCodeError.classList.toggle('hidden', !text);
+        inviteCodeInput.classList.toggle('input-error', !!text);
+      };
+
+      const ERROR_TEXT = {
+        invite_exchange_failed: 'Invite Code 兌換失敗，請確認後再試。',
+        invalid_invite_code: 'Invite Code 無效。',
+        invite_code_not_found: 'Invite Code 不存在。',
+        invite_code_expired: 'Invite Code 已過期。',
+        invite_code_used: 'Invite Code 已使用。',
+        capability_token_required: '缺少授權資訊，請重新開啟邀請連結。',
+        create_failed: '建立短網址失敗，請稍後再試。',
+        alias_exists: '自訂短網址已被使用，請換一個。',
+        invalid_url: 'URL 格式不正確，請以 http/https 開頭。',
+        quota_exceeded: '今日配額已達上限，請稍後再試。',
+        captcha_failed: 'reCAPTCHA 驗證失敗，請再試一次。',
+        'timeout-or-duplicate': 'reCAPTCHA 已逾時，請重新驗證。',
+        'invalid-input-response': 'reCAPTCHA 驗證無效，請重新驗證。',
+        'invalid-input-secret': 'reCAPTCHA 設定錯誤，請通知管理者。'
+      };
+
+      const humanizeError = (errorCode, fallback = '操作失敗，請稍後再試。') => {
+        if (!errorCode) return fallback;
+        return ERROR_TEXT[errorCode] || fallback;
+      };
+
+      const postForm = (url, data) => {
+        const body = new URLSearchParams();
+        Object.keys(data).forEach((key) => {
+          const value = data[key];
+          if (value !== undefined && value !== null && value !== '') body.append(key, value);
+        });
+        return fetch(url, { method: 'POST', body }).then((response) => response.json());
+      };
+
+      const updateInviteExchangeState = () => {
+        const hasCode = inviteCodeInput.value.trim().length > 0;
+        exchangeBtn.classList.toggle('hidden', !hasCode);
+        exchangeBtn.disabled = !hasCode;
+      };
+
+      const setAliasOpen = (open) => {
+        aliasOpen = !!open;
+        aliasPanel.classList.toggle('is-open', aliasOpen);
+        aliasPanel.classList.toggle('is-collapsed', !aliasOpen);
+        aliasToggle.setAttribute('aria-expanded', String(aliasOpen));
+      };
+
+      const resetCaptchaState = () => {
+        captchaVerified = false;
+        recaptchaToken = '';
+        updateCreateFormState();
+      };
+
+      const updateCreateFormState = () => {
+        const valid = inp.value.trim().startsWith('http');
+        const aliasEnabled = aliasOpen;
+        ali.disabled = !aliasEnabled;
+        aliasWrap.classList.toggle('is-disabled', !aliasEnabled);
+        createBtn.classList.toggle('hidden', !valid);
+        createBtn.disabled = !(valid && captchaVerified);
+      };
+
+      const fetchIP = async () => {
+        try {
+          const trace = await fetch('https://www.cloudflare.com/cdn-cgi/trace').then((r) => r.text());
+          const row = trace.split('\n').find((line) => line.startsWith('ip='));
+          ip = row ? row.replace('ip=', '') : '';
+        } catch {
+          ip = '';
+        }
+      };
+
+      const setupRecaptcha = () => {
+        recaptchaWrap.classList.remove('hidden');
+        recaptchaWrap.innerHTML = `<div class="g-recaptcha" data-sitekey="${recaptchaSiteKey}" data-theme="dark" data-callback="verifyCallback"></div>`;
+        const script = document.createElement('script');
+        script.src = 'https://www.google.com/recaptcha/api.js';
+        script.async = true;
+        script.defer = true;
+        document.body.appendChild(script);
+      };
+
+      const enterCreateMode = () => {
+        invitePanel.classList.add('hidden');
+        createPanel.classList.remove('hidden');
+        showToast('Authorized mode enabled.', 'success');
+        setupRecaptcha();
+        updateCreateFormState();
+      };
+
+      const hash = decodeURIComponent((window.location.hash || '').replace(/^#/, ''));
+      if (hash.startsWith('t=')) {
+        capabilityToken = hash.slice(2);
+        history.replaceState({}, '', '/invite');
+        enterCreateMode();
+      }
+
+      exchangeBtn.addEventListener('click', async () => {
+        const code = inviteCodeInput.value.trim();
+        if (!code) {
+          setInviteCodeError('請輸入 Invite Code。');
+          return;
+        }
+        setInviteCodeError('');
+        exchangeBtn.disabled = true;
+        exchangeResult.textContent = '';
+        try {
+          const data = await postForm(api, { action: 'exchange_invite', inviteCode: code, ip });
+          if (!data.success || !data.result) {
+            setInviteCodeError(humanizeError(data.error, 'Invite Code 兌換失敗，請稍後再試。'));
+            return;
+          }
+          exchangeResult.textContent = data.result;
+          showToast('Invite exchanged. Open returned link.', 'success');
+        } catch {
+          setInviteCodeError(humanizeError('invite_exchange_failed'));
+        } finally {
+          updateInviteExchangeState();
+        }
+      });
+      inviteCodeInput.addEventListener('input', () => {
+        setInviteCodeError('');
+        updateInviteExchangeState();
+      });
+      updateInviteExchangeState();
+
+      inp.addEventListener('input', () => {
+        if (!inp.value.trim().startsWith('http')) resetCaptchaState();
+        updateCreateFormState();
+      });
+      aliasToggle.addEventListener('click', () => {
+        setAliasOpen(!aliasOpen);
+        updateCreateFormState();
+      });
+
+      createBtn.addEventListener('click', async () => {
+        if (!capabilityToken) {
+          showToast(humanizeError('capability_token_required'), 'error');
+          return;
+        }
+        if (!captchaVerified || !recaptchaToken) {
+          showToast('Please verify reCAPTCHA first.', 'error');
+          return;
+        }
+        try {
+          const data = await postForm(api, {
+            action: 'create',
+            url: inp.value,
+            alias: aliasOpen ? ali.value || undefined : undefined,
+            capabilityToken,
+            token: recaptchaToken,
+            ip
+          });
+          if (!data.success || !data.result) {
+            showToast(humanizeError(data.error, '建立短網址失敗，請稍後再試。'), 'error');
+            return;
+          }
+          resultNode.textContent = `${pageBase}#${data.result}`;
+          showToast('Create success.', 'success');
+        } catch {
+          showToast(humanizeError('create_failed'), 'error');
+        }
+      });
+
+      window.verifyCallback = (token) => {
+        postForm(api, { action: 'verify_captcha', token, ip })
+          .then((result) => {
+            if (!result.success) {
+              resetCaptchaState();
+              const captchaError = (result['error-codes'] || [result.error || 'captcha_failed'])[0];
+              showToast(humanizeError(captchaError, 'reCAPTCHA 驗證失敗，請再試一次。'), 'error');
+              return;
+            }
+            recaptchaToken = token;
+            captchaVerified = true;
+            updateCreateFormState();
+            showToast('reCAPTCHA verified.', 'success');
+          })
+          .catch(() => {
+            resetCaptchaState();
+            showToast(humanizeError('captcha_failed'), 'error');
+          });
+      };
+
+      fetchIP();
+    </script>
+  </body>
+</html>

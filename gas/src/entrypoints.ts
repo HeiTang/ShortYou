@@ -1,18 +1,18 @@
 /**
- * GAS backend entrypoint composition.
+ * GAS 後端進入點組裝。
  *
- * Source layout (SOLID/DRY split):
- * - types.ts: shared types/errors
- * - config.ts: AppConfig
- * - utils.ts: normalizer/date/hash/random helpers
- * - repository.ts: Sheets DAL
- * - services.ts: domain/application services
- * - controller.ts: HTTP controller
- * - entrypoints.ts: bootstrap + GAS global entrypoints + admin wrappers
+ * 原始碼分層：
+ * - types.ts：共用型別與錯誤
+ * - config.ts：AppConfig 設定載入
+ * - utils.ts：正規化 / 日期 / 雜湊 / 隨機工具
+ * - repository.ts：Sheet 資料存取層
+ * - services.ts：業務規則層
+ * - controller.ts：HTTP 控制器層
+ * - entrypoints.ts：依賴組裝 + GAS 全域函式 + 管理包裝
  *
- * Build note:
- * TypeScript compiles all gas/src/*.ts into a single generated gas/Code.js via outFile.
- * Please edit source files under gas/src only.
+ * 建置說明：
+ * - 以 scripts/build-gas.mjs 將 gas/src/*.ts 合併輸出為 gas/Code.js
+ * - 請只編輯 gas/src，不要手改 gas/Code.js
  */
 
 const appConfig = AppConfig.load();
@@ -23,6 +23,7 @@ const shortUrlService = new ShortUrlService(sheetRepository, appConfig);
 const captchaService = new CaptchaService(appConfig);
 const accessControlService = new AccessControlService(sheetRepository, appConfig);
 const inviteService = new InviteService(sheetRepository);
+// 單一 ApiController 負責整體 HTTP 請求分派。
 const apiController = new ApiController(
   appConfig,
   sheetRepository,
@@ -48,6 +49,7 @@ function createInvite(
   issuedToHint: string,
   note: string
 ): ApiResult {
+  // 管理端輸入 invite code 只會儲存 hash，不保存明文。
   const normalizedInvite = InputNormalizer.text(inviteCode);
   if (!normalizedInvite) return { success: false, result: '', error: 'missing_invite_code' };
   const hash = DigestUtil.sha256Hex(normalizedInvite);
@@ -84,8 +86,7 @@ function rotateClientToken(clientCode: string): ApiResult {
 }
 
 /**
- * Legacy wrappers for old scripts/macros.
- * Keep names stable so existing manual ops still work after refactor.
+ * 舊版相容函式：保留既有巨集名稱，避免重構後手動流程失效。
  */
 function create(inviteCode: string): GoogleAppsScript.Content.TextOutput {
   const result = createInvite(
@@ -110,6 +111,7 @@ function add(
   token: string,
   ip: string
 ): GoogleAppsScript.Content.TextOutput {
+  // 舊版 add() 參數 id 對應新版 capabilityToken。
   const payload: Record<string, unknown> = {
     url,
     alias,
@@ -146,5 +148,6 @@ function upsertClient(
 }
 
 function json_(obj: JsonObject | ApiResult): GoogleAppsScript.Content.TextOutput {
+  // GAS 回應統一走 JSON，方便前端與腳本一致解析。
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }

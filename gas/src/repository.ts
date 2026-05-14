@@ -1,6 +1,6 @@
 /**
  * Data Access Layer (DAL) for all spreadsheet operations.
- * Keep all sheet schema/columns/queries here to avoid leaking sheet details into services.
+ * 所有欄位定義、查詢與寫入都集中於此，避免服務層直接耦合 Sheet 細節。
  */
 class SheetRepository {
   private static readonly SHORT_COL_ALIAS = 1;
@@ -39,6 +39,7 @@ class SheetRepository {
   constructor(private readonly config: AppConfig) {}
 
   withScriptLock<T>(callback: () => T): T {
+    // 寫入關鍵流程加鎖，避免併發造成 alias 或配額競態。
     const lock = LockService.getScriptLock();
     lock.waitLock(5000);
     try {
@@ -49,6 +50,7 @@ class SheetRepository {
   }
 
   ensureSchema(): void {
+    // 啟動時確保四張核心資料表存在，若不存在則自動建立。
     this.ensureShortSheet_();
     this.ensureClientsSheet_();
     this.ensureInvitesSheet_();
@@ -137,6 +139,7 @@ class SheetRepository {
 
     if (invite.status !== 'active') return { success: false, result: '', error: 'invite_disabled' };
     if (DateUtil.isExpired(invite.expiresAt, DateUtil.now())) {
+      // 到期時同步回寫狀態，避免下一次仍被視為可用。
       sheet.getRange(row, SheetRepository.INVITE_COL_STATUS).setValue('expired');
       return { success: false, result: '', error: 'invite_expired' };
     }
@@ -153,6 +156,7 @@ class SheetRepository {
     const displayOwner = InputNormalizer.text(ownerName) || clientCode;
 
     const clientsSheet = this.ensureClientsSheet_();
+    // 兌換成功後建立 client，僅儲存 capability token hash。
     clientsSheet.appendRow([
       clientCode,
       displayOwner,
@@ -216,6 +220,7 @@ class SheetRepository {
     let dailyUsed = record.dailyUsed;
     let quotaResetAt = record.quotaResetAt;
     if (!quotaResetAt || DateUtil.isExpired(quotaResetAt, now)) {
+      // 到達重置時間即歸零，並設定下一個 UTC 重置時間。
       dailyUsed = 0;
       quotaResetAt = DateUtil.nextUtcDayIso(now);
       clientsSheet.getRange(row, SheetRepository.CLIENT_COL_DAILY_USED).setValue(0);
@@ -270,8 +275,8 @@ class SheetRepository {
   }
 
   /**
-   * Admin helper: create or update a client with an explicit capability token.
-   * Token is never stored as plaintext; only hash + hint are persisted.
+   * 管理端工具：以指定 capability token 建立或更新 client。
+   * token 不會以明文儲存，只落地 hash 與提示片段。
    */
   upsertClient(
     clientCodeInput: string,
@@ -345,6 +350,7 @@ class SheetRepository {
     result: 'success' | 'fail',
     reason: string
   ): void {
+    // 稽核日誌使用 append-only，降低追查問題時資料被覆寫的風險。
     const sheet = this.ensureAuditSheet_();
     sheet.appendRow([DateUtil.nowIso(), event, clientCode, ip, result, reason]);
   }
@@ -355,6 +361,7 @@ class SheetRepository {
     if (existing) return existing;
 
     const created = spreadsheet.insertSheet(this.config.shortLinksSheetName);
+    // Header 名稱即為資料契約，變更前需同步更新 repository 欄位常數。
     created.appendRow([
       'alias',
       'url',
@@ -425,6 +432,7 @@ class SheetRepository {
   private findShortAliasRow_(sheet: GoogleAppsScript.Spreadsheet.Sheet, alias: string): number {
     const lastRow = sheet.getLastRow();
     if (lastRow < 1) return 0;
+    // 允許無 header 舊資料表，保持向後相容。
     const hasHeader = InputNormalizer.alias(sheet.getRange(1, 1).getValue()) === 'alias';
     const startRow = hasHeader ? 2 : 1;
     const rowCount = lastRow - startRow + 1;
@@ -479,6 +487,7 @@ class SheetRepository {
       const candidate = RandomUtil.randomClientCode(10);
       if (this.findClientRowByCode_(clientsSheet, candidate) === 0) return candidate;
     }
+    // 連續嘗試失敗代表碰撞率異常，交由上層記錄與告警。
     throw new Error('client_code_generation_failed');
   }
 }

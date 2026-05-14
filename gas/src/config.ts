@@ -1,6 +1,6 @@
 /**
- * Runtime config loader from GAS Script Properties.
- * Centralizes defaults and guardrails so services stay focused on domain logic.
+ * 從 GAS Script Properties 載入執行期設定。
+ * 將預設值與邊界條件集中於此，避免業務服務層分散處理設定細節。
  */
 class AppConfig {
   readonly shortLinksSheetName: string;
@@ -22,6 +22,7 @@ class AppConfig {
   readonly reservedAliases: Set<string>;
 
   private constructor(props: GoogleAppsScript.Properties.Properties) {
+    // 相容舊鍵名 SHORT_SHEET_NAME，並優先使用新鍵名 SHORT_LINKS_SHEET_NAME。
     const fallbackShort = AppConfig.textProp_(props, 'SHORT_SHEET_NAME', 'short_links');
     this.shortLinksSheetName = AppConfig.textProp_(props, 'SHORT_LINKS_SHEET_NAME', fallbackShort);
     this.clientsSheetName = AppConfig.textProp_(props, 'CLIENTS_SHEET_NAME', 'clients');
@@ -64,6 +65,7 @@ class AppConfig {
   }
 
   static load(): AppConfig {
+    // 每次啟動以最新 Script Properties 建立設定物件。
     return new AppConfig(PropertiesService.getScriptProperties());
   }
 
@@ -102,6 +104,7 @@ class AppConfig {
   }
 
   inviteLink(capabilityToken: string): string {
+    // 統一組裝 invite 頁連結格式，避免散落各層自行串接。
     return `${this.publicSiteUrl}${this.invitePagePath}#t=${encodeURIComponent(capabilityToken)}`;
   }
 }

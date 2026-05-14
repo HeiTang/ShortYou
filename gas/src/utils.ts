@@ -1,4 +1,4 @@
-/** Small stateless helpers shared by multiple layers. */
+/** 提供多層可重用的無狀態工具函式。 */
 class InputNormalizer {
   static text(value: unknown): string {
     if (value === undefined || value === null) return '';
@@ -39,6 +39,7 @@ class DateUtil {
   }
 
   static nextUtcDayIso(now: Date): string {
+    // 配額以 UTC 隔日重置，確保跨時區行為一致。
     const next = new Date(now.getTime());
     next.setUTCHours(0, 0, 0, 0);
     next.setUTCDate(next.getUTCDate() + 1);
@@ -63,6 +64,7 @@ class DigestUtil {
   }
 
   static timingSafeEqual(a: string, b: string): boolean {
+    // 固定時間比較可降低字串比較的時序側通道風險。
     if (a.length !== b.length) return false;
     let mismatch = 0;
     for (let i = 0; i < a.length; i += 1) mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
@@ -92,6 +94,7 @@ class RandomUtil {
   }
 
   static randomToken(length: number): string {
+    // UUID 去除連字號後串接，確保能產生足夠長度的高熵 token。
     let token = '';
     while (token.length < length) {
       token += Utilities.getUuid().replace(/-/g, '');

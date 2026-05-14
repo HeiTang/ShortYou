@@ -1,6 +1,6 @@
 /**
  * HTTP transport/controller layer.
- * Maps request payload/actions to domain services and normalizes API output.
+ * 負責解析請求、分派 action、呼叫服務層並統一輸出 JSON。
  */
 class ApiController {
   constructor(
@@ -29,6 +29,7 @@ class ApiController {
     const action = InputNormalizer.text(payload.action).toLowerCase();
     if (action === 'exchange_invite') return this.handleExchangeInvite_(payload);
     if (action === 'verify_captcha') return this.handleVerifyCaptcha_(payload);
+    // 預設行為為 create，與舊版前端呼叫方式相容。
     return this.handleCreate_(payload);
   }
 
@@ -45,6 +46,7 @@ class ApiController {
     const ip = InputNormalizer.text(payload.ip);
 
     const result = this.inviteService.exchange(inviteCode, ownerName);
+    // 無論成功或失敗都留下 audit log，便於事後追蹤。
     this.repository.appendAuditLog(
       'exchange_invite',
       InputNormalizer.text(result.clientCode),
@@ -104,6 +106,7 @@ class ApiController {
 
     const raw = InputNormalizer.text(e && e.postData && e.postData.contents);
     const type = InputNormalizer.text(e && e.postData && e.postData.type).toLowerCase();
+    // 非 JSON 內容直接使用 form/query 參數，保持簡單請求相容。
     if (!raw || !type.includes('application/json')) return merged;
 
     let parsed: unknown;
@@ -116,6 +119,7 @@ class ApiController {
       throw new InvalidJsonError();
     }
 
+    // JSON body 欄位會覆蓋同名參數，提供更明確的 payload 優先權。
     const parsedObj = parsed as Record<string, unknown>;
     for (const key of Object.keys(parsedObj)) merged[key] = parsedObj[key];
     return merged;

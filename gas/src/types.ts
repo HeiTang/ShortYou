@@ -1,5 +1,5 @@
 /**
- * Shared primitive/domain types used across controller, services and repository.
+ * 後端共用型別：供 controller / services / repository 共同使用。
  */
 type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
 type JsonObject = { [key: string]: JsonValue };
@@ -42,6 +42,7 @@ type InviteRecord = {
 
 class InvalidJsonError extends Error {
   constructor() {
+    // 使用明確錯誤型別，讓 controller 可以回傳固定錯誤碼。
     super('invalid_json');
   }
 }

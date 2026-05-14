@@ -1,11 +1,12 @@
 /**
  * Application/domain services layer.
- * Handles business rules while repository stays focused on Sheets IO details.
+ * 此層處理 domain 決策，repository 僅負責資料存取。
  */
 class CaptchaService {
   constructor(private readonly config: AppConfig) {}
 
   verify(token: string, ip: string): ApiResult {
+    // 未設定 secret 時視為略過驗證，交由部署策略控制是否允許。
     if (!this.config.recaptchaSecret) return { success: true, result: '', skipped: true };
     try {
       const response = UrlFetchApp.fetch('https://www.google.com/recaptcha/api/siteverify', {
@@ -36,11 +37,12 @@ class CaptchaService {
   }
 }
 
-/** Authorization service for create API capability-token checks. */
+/** 建立短網址前的授權服務（capability token 驗證）。 */
 class AccessControlService {
   constructor(private readonly repository: SheetRepository, private readonly config: AppConfig) {}
 
   authorizeCreate(capabilityToken: string): ApiResult {
+    // 若關閉 access control，回傳匿名 client 以維持相容。
     if (!this.config.enforceAccessControl) return { success: true, result: 'anonymous', skipped: true };
     if (!capabilityToken) return { success: false, result: '', error: 'capability_token_required' };
     return this.repository.withScriptLock(() =>
@@ -49,7 +51,7 @@ class AccessControlService {
   }
 }
 
-/** Invite exchange flow service (invite code -> capability token link). */
+/** 邀請碼兌換服務（invite code -> capability token link）。 */
 class InviteService {
   constructor(private readonly repository: SheetRepository) {}
 
@@ -61,7 +63,7 @@ class InviteService {
   }
 }
 
-/** Core short-url domain service (resolve/create/custom alias/random alias). */
+/** 短網址核心服務（查詢、建立、自訂別名、隨機別名）。 */
 class ShortUrlService {
   constructor(private readonly repository: SheetRepository, private readonly config: AppConfig) {}
 
@@ -85,6 +87,7 @@ class ShortUrlService {
     if (!this.isValidUrl_(url)) return { success: false, result: '', error: 'invalid_url' };
 
     const rawAlias = InputNormalizer.text(customAliasInput);
+    // 有傳 alias 走自訂分支，否則走隨機別名分支。
     if (rawAlias) return this.createCustomAlias_(url, rawAlias, clientCode);
     return this.createRandomAlias_(url, clientCode);
   }
@@ -109,6 +112,7 @@ class ShortUrlService {
 
   private createRandomAlias_(url: string, clientCode: string): ApiResult {
     return this.repository.withScriptLock(() => {
+      // 逐步拉長 alias 長度，降低碰撞時的無限重試風險。
       for (
         let length = this.config.randomAliasInitialLength;
         length <= this.config.randomAliasMaxLength;
@@ -128,6 +132,7 @@ class ShortUrlService {
   private isValidUrl_(url: string): boolean {
     if (!/^https?:\/\/\S+$/i.test(url)) return false;
     if (url.length > this.config.maxUrlLength) return false;
+    // 阻擋試算表常見公式注入起始字元。
     if (/^[=+\-@]/.test(url)) return false;
     try {
       const parsed = new URL(url);

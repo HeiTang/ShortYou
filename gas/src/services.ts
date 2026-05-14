@@ -51,18 +51,6 @@ class AccessControlService {
   }
 }
 
-/** 邀請碼兌換服務（invite code -> capability token link）。 */
-class InviteService {
-  constructor(private readonly repository: SheetRepository) {}
-
-  exchange(inviteCode: string, ownerName: string): ApiResult {
-    const normalized = InputNormalizer.text(inviteCode);
-    if (!normalized) return { success: false, result: '', error: 'missing_invite_code' };
-    const hash = DigestUtil.sha256Hex(normalized);
-    return this.repository.withScriptLock(() => this.repository.exchangeInvite(hash, ownerName));
-  }
-}
-
 /** 短網址核心服務（查詢、建立、自訂別名、隨機別名）。 */
 class ShortUrlService {
   constructor(private readonly repository: SheetRepository, private readonly config: AppConfig) {}

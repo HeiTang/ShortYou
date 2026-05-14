@@ -5,7 +5,6 @@
 class AppConfig {
   readonly shortLinksSheetName: string;
   readonly clientsSheetName: string;
-  readonly invitesSheetName: string;
   readonly auditLogsSheetName: string;
   readonly recaptchaSecret: string;
   readonly enforceCaptcha: boolean;
@@ -18,7 +17,6 @@ class AppConfig {
   readonly defaultDailyQuota: number;
   readonly capabilityTokenLength: number;
   readonly publicSiteUrl: string;
-  readonly invitePagePath: string;
   readonly reservedAliases: Set<string>;
 
   private constructor(props: GoogleAppsScript.Properties.Properties) {
@@ -26,7 +24,6 @@ class AppConfig {
     const fallbackShort = AppConfig.textProp_(props, 'SHORT_SHEET_NAME', 'short_links');
     this.shortLinksSheetName = AppConfig.textProp_(props, 'SHORT_LINKS_SHEET_NAME', fallbackShort);
     this.clientsSheetName = AppConfig.textProp_(props, 'CLIENTS_SHEET_NAME', 'clients');
-    this.invitesSheetName = AppConfig.textProp_(props, 'INVITES_SHEET_NAME', 'invites');
     this.auditLogsSheetName = AppConfig.textProp_(props, 'AUDIT_LOGS_SHEET_NAME', 'audit_logs');
     this.recaptchaSecret = AppConfig.textProp_(props, 'RECAPTCHA_SECRET', '');
     this.enforceCaptcha = AppConfig.boolProp_(props, 'ENFORCE_CAPTCHA', true);
@@ -53,8 +50,6 @@ class AppConfig {
       /\/$/,
       ''
     );
-    this.invitePagePath =
-      AppConfig.textProp_(props, 'INVITE_PAGE_PATH', '/invite').replace(/\/$/, '') || '/invite';
     this.aliasPattern = /^[a-z0-9_-]{3,32}$/;
     this.reservedAliases = new Set(
       AppConfig.textProp_(props, 'RESERVED_ALIASES', '')
@@ -103,8 +98,8 @@ class AppConfig {
     return Math.min(max, Math.max(min, Math.floor(parsed)));
   }
 
-  inviteLink(capabilityToken: string): string {
-    // 統一組裝 invite 頁連結格式，避免散落各層自行串接。
-    return `${this.publicSiteUrl}${this.invitePagePath}#t=${encodeURIComponent(capabilityToken)}`;
+  capabilityLink(capabilityToken: string): string {
+    // 對外只發放首頁 token 入口，前端讀到 #t= 後切換為真實建立模式。
+    return `${this.publicSiteUrl}/#t=${encodeURIComponent(capabilityToken)}`;
   }
 }

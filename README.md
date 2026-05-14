@@ -36,8 +36,7 @@
 1. Open homepage: [ShortYou](https://t.purr.tw/)
 2. Public redirect: `https://t.purr.tw/#<alias>`
 3. Homepage playground (unauthorized): generate fake links for demo only
-4. Invite page (authorized create): `https://t.purr.tw/invite`
-5. Capability create mode: `https://t.purr.tw/invite#t=<capabilityToken>`
+4. Authorized create mode: `https://t.purr.tw/#t=<capabilityToken>`
 
 ## Frontend (Astro + Tailwind + GitHub Pages)
 
@@ -49,12 +48,10 @@
 ### Frontend behavior
 
 - Homepage (`/`):
+  - `#t=<token>` → authorized create mode on the same page
   - `#alias` → query backend and redirect
-  - no hash → fake short-link playground (stored in localStorage)
-- Invite page (`/invite`):
-  - exchange invite code
-  - `#t=<token>` → authorized create mode
-- Token hash is removed from URL via `history.replaceState` after page loads create mode.
+  - no hash → fake short-link playground (frontend returns a fixed mock result only, no create API request)
+- Single homepage only, no secondary frontend route.
 - No jQuery dependency.
 
 ## Google Apps Script Backend (clasp + TypeScript)
@@ -102,10 +99,8 @@
 - `ENFORCE_CAPTCHA` (`true` / `false`)
 - `ENFORCE_ACCESS_CONTROL` (`true` / `false`)
 - `PUBLIC_SITE_URL` (default: `https://t.purr.tw`)
-- `INVITE_PAGE_PATH` (default: `/invite`)
 - `SHORT_LINKS_SHEET_NAME` (default: `short_links`)
 - `CLIENTS_SHEET_NAME` (default: `clients`)
-- `INVITES_SHEET_NAME` (default: `invites`)
 - `AUDIT_LOGS_SHEET_NAME` (default: `audit_logs`)
 - `DEFAULT_DAILY_QUOTA` (default: `0`, means unlimited)
 - `RESERVED_ALIASES` (comma-separated)
@@ -116,41 +111,30 @@
    - `alias`, `url`, `clicks`, `created_by_client`, `status`, `created_at`, `updated_at`, `last_access_at`
 2. `clients`
    - `client_code`, `owner_name`, `status`, `capability_token_hash`, `token_hint`, `issued_at`, `expires_at`, `daily_quota`, `daily_used`, `quota_reset_at`, `last_used_at`, `note`
-3. `invites`
-   - `invite_code_hash`, `status`, `max_uses`, `used_count`, `expires_at`, `issued_by`, `issued_to_hint`, `created_at`, `last_used_at`, `note`
-4. `audit_logs`
+3. `audit_logs`
    - `time`, `event`, `client_code`, `ip`, `result`, `reason`
 
 ### API actions
 
 - `POST action=verify_captcha`
-- `POST action=exchange_invite`
 - `POST action=create` (default if `url` exists)
 - `GET ?query=<alias>` for redirect lookup
 
-### Invite and capability workflow
+### Capability workflow
 
-1. Admin generates invite code:
+1. Admin generates capability link:
 
     ```javascript
-    createInvite(1, '', 'admin', 'alice', 'one-time invite');
+  issueCapabilityLink('alice', '2026-12-31T23:59:59.000Z', 10, 'issued manually');
     ```
 
-2. User exchanges invite code:
-
-    ```bash
-    curl -X POST "$GAS_WEBAPP_URL" \
-      -d "action=exchange_invite" \
-      -d "inviteCode=YOUR_INVITE_CODE"
-    ```
-
-3. Backend returns dedicated create link:
+2. Backend returns dedicated create link:
 
     ```text
-    https://t.purr.tw/invite#t=<capabilityToken>
+  https://t.purr.tw/#t=<capabilityToken>
     ```
 
-4. User creates short URL with capability token:
+3. User creates short URL with capability token:
 
     ```bash
     curl -X POST "$GAS_WEBAPP_URL" \
@@ -165,11 +149,9 @@
 ### Admin helper functions (GAS editor)
 
 ```javascript
-ensureDatabaseSchema();
-createInvite(1, '', 'admin', 'alice', 'invite for alice');
-disableInvite('INVITE_CODE');
+issueCapabilityLink('alice', '2026-12-31T23:59:59.000Z', 10, 'issued manually');
 disableClient('c_xxxxxxx');
-rotateCapabilityToken('c_xxxxxxx');
+rotateClientToken('c_xxxxxxx');
 ```
 
 ## CI/CD (GitHub Actions)

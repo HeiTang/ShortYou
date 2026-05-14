@@ -41,18 +41,6 @@ body {
   @apply absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1;
 }
 
-.invite-row {
-  @apply flex items-stretch gap-2;
-}
-
-.invite-input-wrap {
-  @apply relative flex-1;
-}
-
-.invite-code-input {
-  @apply w-full px-12 text-center;
-}
-
 .input-help {
   @apply absolute right-3 top-1/2 -translate-y-1/2;
 }
@@ -116,10 +104,6 @@ body {
 
 .flat-btn-inline {
   @apply h-9 px-3 py-0 text-xs;
-}
-
-.invite-exchange-btn {
-  @apply h-[44px] border-orange-400 bg-orange-500 px-4 py-0 text-sm font-bold text-zinc-950 hover:bg-orange-400;
 }
 
 .field-error {

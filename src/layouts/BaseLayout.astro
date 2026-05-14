@@ -3,13 +3,10 @@ import '../styles/global.css';
 import Footer from '../components/common/Footer.astro';
 import Header from '../components/common/Header.astro';
 
-type ActiveNav = 'url' | 'invite';
-
 type Props = {
   title: string;
   description: string;
   robots: string;
-  activeNav: ActiveNav;
   canonical?: string;
 };
 
@@ -17,7 +14,6 @@ const {
   title,
   description,
   robots,
-  activeNav,
   canonical = 'https://t.purr.tw/'
 } = Astro.props as Props;
 ---
@@ -36,7 +32,7 @@ const {
   </head>
   <body class="min-h-screen bg-zinc-900 text-slate-100">
     <main class="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-5">
-      <Header activeNav={activeNav} />
+      <Header />
 
       <slot />
 

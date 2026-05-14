@@ -6,7 +6,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   title="ShortYou ฅ•ω•ฅ"
   description="ShortYou is a URL Shortener."
   robots="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1"
-  activeNav="url"
 >
   <section id="redirectPanel" class="mb-4 hidden border border-slate-600 bg-slate-800 px-4 py-3 text-sm text-slate-200">
     Redirecting...
@@ -67,16 +66,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <p class="text-xs text-slate-400">Playground only, not persisted to backend.</p>
+      <p id="modeHint" class="text-xs text-slate-400">Playground only: this page returns a mock result and does not call the create API.</p>
+      <div id="recaptcha" class="hidden"></div>
       <p id="result" class="mt-3 break-all text-sm text-cyan-300"></p>
     </div>
   </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" slot="afterMain"></div>
 
   <script>
     import { getFrontendConfig } from '../scripts/config';
     import { initIndexPage } from '../scripts/index-page';
 
-    const { api } = getFrontendConfig();
-    initIndexPage({ api });
+    const { api, recaptchaSiteKey } = getFrontendConfig();
+    initIndexPage({ api, recaptchaSiteKey });
   </script>
 </BaseLayout>

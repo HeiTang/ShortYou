@@ -25,17 +25,6 @@ class SheetRepository {
   private static readonly CLIENT_COL_LAST_USED_AT = 11;
   private static readonly CLIENT_COL_NOTE = 12;
 
-  private static readonly INVITE_COL_HASH = 1;
-  private static readonly INVITE_COL_STATUS = 2;
-  private static readonly INVITE_COL_MAX_USES = 3;
-  private static readonly INVITE_COL_USED_COUNT = 4;
-  private static readonly INVITE_COL_EXPIRES_AT = 5;
-  private static readonly INVITE_COL_ISSUED_BY = 6;
-  private static readonly INVITE_COL_ISSUED_TO_HINT = 7;
-  private static readonly INVITE_COL_CREATED_AT = 8;
-  private static readonly INVITE_COL_LAST_USED_AT = 9;
-  private static readonly INVITE_COL_NOTE = 10;
-
   constructor(private readonly config: AppConfig) {}
 
   withScriptLock<T>(callback: () => T): T {
@@ -50,10 +39,9 @@ class SheetRepository {
   }
 
   ensureSchema(): void {
-    // 啟動時確保四張核心資料表存在，若不存在則自動建立。
+    // 啟動時確保三張核心資料表存在，若不存在則自動建立。
     this.ensureShortSheet_();
     this.ensureClientsSheet_();
-    this.ensureInvitesSheet_();
     this.ensureAuditSheet_();
   }
 
@@ -88,101 +76,6 @@ class SheetRepository {
     const sheet = this.ensureShortSheet_();
     const now = DateUtil.nowIso();
     sheet.appendRow([alias, url, 0, clientCode, 'active', now, now, '']);
-  }
-
-  createInvite(
-    inviteCodeHash: string,
-    maxUses: number,
-    expiresAt: string,
-    issuedBy: string,
-    issuedToHint: string,
-    note: string
-  ): void {
-    const sheet = this.ensureInvitesSheet_();
-    const now = DateUtil.nowIso();
-    sheet.appendRow([
-      inviteCodeHash,
-      'active',
-      maxUses,
-      0,
-      expiresAt,
-      issuedBy,
-      issuedToHint,
-      now,
-      '',
-      note
-    ]);
-  }
-
-  disableInvite(inviteCodeHash: string): ApiResult {
-    const sheet = this.ensureInvitesSheet_();
-    const row = this.findInviteRowByHash_(sheet, inviteCodeHash);
-    if (row === 0) return { success: false, result: '', error: 'invite_not_found' };
-    sheet.getRange(row, SheetRepository.INVITE_COL_STATUS).setValue('disabled');
-    return { success: true, result: 'disabled' };
-  }
-
-  exchangeInvite(inviteCodeHash: string, ownerName: string): ApiResult {
-    const sheet = this.ensureInvitesSheet_();
-    const row = this.findInviteRowByHash_(sheet, inviteCodeHash);
-    if (row === 0) return { success: false, result: '', error: 'invalid_invite' };
-
-    const invite: InviteRecord = {
-      row,
-      status: InputNormalizer.status(sheet.getRange(row, SheetRepository.INVITE_COL_STATUS).getValue()) || 'active',
-      maxUses: Number(sheet.getRange(row, SheetRepository.INVITE_COL_MAX_USES).getValue()) || 0,
-      usedCount: Number(sheet.getRange(row, SheetRepository.INVITE_COL_USED_COUNT).getValue()) || 0,
-      expiresAt: InputNormalizer.text(
-        sheet.getRange(row, SheetRepository.INVITE_COL_EXPIRES_AT).getValue()
-      )
-    };
-
-    if (invite.status !== 'active') return { success: false, result: '', error: 'invite_disabled' };
-    if (DateUtil.isExpired(invite.expiresAt, DateUtil.now())) {
-      // 到期時同步回寫狀態，避免下一次仍被視為可用。
-      sheet.getRange(row, SheetRepository.INVITE_COL_STATUS).setValue('expired');
-      return { success: false, result: '', error: 'invite_expired' };
-    }
-    if (invite.maxUses > 0 && invite.usedCount >= invite.maxUses) {
-      return { success: false, result: '', error: 'invite_limit_reached' };
-    }
-
-    const capabilityToken = RandomUtil.randomToken(this.config.capabilityTokenLength);
-    const capabilityTokenHash = DigestUtil.sha256Hex(capabilityToken);
-    const clientCode = this.generateUniqueClientCode_();
-    const now = DateUtil.now();
-    const nowIso = now.toISOString();
-    const resetIso = DateUtil.nextUtcDayIso(now);
-    const displayOwner = InputNormalizer.text(ownerName) || clientCode;
-
-    const clientsSheet = this.ensureClientsSheet_();
-    // 兌換成功後建立 client，僅儲存 capability token hash。
-    clientsSheet.appendRow([
-      clientCode,
-      displayOwner,
-      'active',
-      capabilityTokenHash,
-      `${capabilityToken.slice(0, 6)}...`,
-      nowIso,
-      '',
-      this.config.defaultDailyQuota,
-      0,
-      resetIso,
-      '',
-      'issued_by_invite'
-    ]);
-
-    sheet.getRange(row, SheetRepository.INVITE_COL_USED_COUNT).setValue(invite.usedCount + 1);
-    sheet.getRange(row, SheetRepository.INVITE_COL_LAST_USED_AT).setValue(nowIso);
-
-    const link = this.config.inviteLink(capabilityToken);
-    return {
-      success: true,
-      result: link,
-      link,
-      capabilityToken,
-      clientCode
-    };
   }
 
   authorizeClientByCapabilityToken(capabilityToken: string): ApiResult {
@@ -269,8 +162,63 @@ class SheetRepository {
       .setValue(DateUtil.nextUtcDayIso(DateUtil.now()));
     return {
       success: true,
-      result: this.config.inviteLink(capabilityToken),
+      result: this.config.capabilityLink(capabilityToken),
       capabilityToken
+    };
+  }
+
+  /**
+   * 管理端工具：直接建立 client 並簽發 capability link。
+   * 適用於已移除前台 invite 頁後，由管理者主動發放建立連結的流程。
+   */
+  issueCapabilityLink(
+    ownerNameInput: string,
+    expiresAtIsoInput: string,
+    dailyQuotaInput: number,
+    noteInput: string
+  ): ApiResult {
+    const capabilityToken = RandomUtil.randomToken(this.config.capabilityTokenLength);
+    const capabilityTokenHash = DigestUtil.sha256Hex(capabilityToken);
+    const clientCode = this.generateUniqueClientCode_();
+    const ownerName = InputNormalizer.text(ownerNameInput) || clientCode;
+    const expiresAtIso = InputNormalizer.text(expiresAtIsoInput);
+    if (expiresAtIso && !DateUtil.parseIso(expiresAtIso)) {
+      return { success: false, result: '', error: 'invalid_expires_at' };
+    }
+
+    const dailyQuotaValue = Number(dailyQuotaInput);
+    const dailyQuota = Number.isFinite(dailyQuotaValue)
+      ? Math.max(0, Math.floor(dailyQuotaValue))
+      : this.config.defaultDailyQuota;
+
+    const now = DateUtil.now();
+    const nowIso = now.toISOString();
+    const quotaResetAt = DateUtil.nextUtcDayIso(now);
+    const tokenHint = `${capabilityToken.slice(0, 6)}...`;
+    const note = InputNormalizer.text(noteInput);
+
+    const clientsSheet = this.ensureClientsSheet_();
+    clientsSheet.appendRow([
+      clientCode,
+      ownerName,
+      'active',
+      capabilityTokenHash,
+      tokenHint,
+      nowIso,
+      expiresAtIso,
+      dailyQuota,
+      0,
+      quotaResetAt,
+      '',
+      note
+    ]);
+
+    return {
+      success: true,
+      result: this.config.capabilityLink(capabilityToken),
+      clientCode,
+      capabilityToken,
+      ownerName
     };
   }
 
@@ -398,27 +346,6 @@ class SheetRepository {
     return created;
   }
 
-  private ensureInvitesSheet_(): GoogleAppsScript.Spreadsheet.Sheet {
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    const existing = spreadsheet.getSheetByName(this.config.invitesSheetName);
-    if (existing) return existing;
-
-    const created = spreadsheet.insertSheet(this.config.invitesSheetName);
-    created.appendRow([
-      'invite_code_hash',
-      'status',
-      'max_uses',
-      'used_count',
-      'expires_at',
-      'issued_by',
-      'issued_to_hint',
-      'created_at',
-      'last_used_at',
-      'note'
-    ]);
-    return created;
-  }
-
   private ensureAuditSheet_(): GoogleAppsScript.Spreadsheet.Sheet {
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     const existing = spreadsheet.getSheetByName(this.config.auditLogsSheetName);
@@ -467,16 +394,6 @@ class SheetRepository {
     const values = sheet.getRange(2, SheetRepository.CLIENT_COL_CODE, lastRow - 1, 1).getValues();
     for (let i = 0; i < values.length; i += 1) {
       if (InputNormalizer.text(values[i][0]) === clientCode) return i + 2;
-    }
-    return 0;
-  }
-
-  private findInviteRowByHash_(sheet: GoogleAppsScript.Spreadsheet.Sheet, inviteCodeHash: string): number {
-    const lastRow = sheet.getLastRow();
-    if (lastRow < 2) return 0;
-    const values = sheet.getRange(2, SheetRepository.INVITE_COL_HASH, lastRow - 1, 1).getValues();
-    for (let i = 0; i < values.length; i += 1) {
-      if (InputNormalizer.text(values[i][0]) === inviteCodeHash) return i + 2;
     }
     return 0;
   }

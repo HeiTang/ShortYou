@@ -8,8 +8,7 @@ class ApiController {
     private readonly repository: SheetRepository,
     private readonly shortUrlService: ShortUrlService,
     private readonly captchaService: CaptchaService,
-    private readonly accessControlService: AccessControlService,
-    private readonly inviteService: InviteService
+    private readonly accessControlService: AccessControlService
   ) {}
 
   handleGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextOutput {
@@ -27,7 +26,6 @@ class ApiController {
     }
 
     const action = InputNormalizer.text(payload.action).toLowerCase();
-    if (action === 'exchange_invite') return this.handleExchangeInvite_(payload);
     if (action === 'verify_captcha') return this.handleVerifyCaptcha_(payload);
     // 預設行為為 create，與舊版前端呼叫方式相容。
     return this.handleCreate_(payload);
@@ -38,23 +36,6 @@ class ApiController {
     const ip = InputNormalizer.text(payload.ip);
     if (!token) return json_({ success: false, result: '', error: 'missing_token' });
     return json_(this.captchaService.verify(token, ip));
-  }
-
-  private handleExchangeInvite_(payload: Record<string, unknown>): GoogleAppsScript.Content.TextOutput {
-    const inviteCode = InputNormalizer.text(payload.inviteCode);
-    const ownerName = InputNormalizer.text(payload.ownerName);
-    const ip = InputNormalizer.text(payload.ip);
-
-    const result = this.inviteService.exchange(inviteCode, ownerName);
-    // 無論成功或失敗都留下 audit log，便於事後追蹤。
-    this.repository.appendAuditLog(
-      'exchange_invite',
-      InputNormalizer.text(result.clientCode),
-      ip,
-      result.success ? 'success' : 'fail',
-      result.success ? 'ok' : InputNormalizer.text(result.error)
-    );
-    return json_(result);
   }
 
   private handleCreate_(payload: Record<string, unknown>): GoogleAppsScript.Content.TextOutput {

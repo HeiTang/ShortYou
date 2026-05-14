@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /invite
 
 Sitemap: https://t.purr.tw/sitemap-index.xml

@@ -32,14 +32,6 @@ type ClientRecord = {
   quotaResetAt: string;
 };
 
-type InviteRecord = {
-  row: number;
-  status: string;
-  maxUses: number;
-  usedCount: number;
-  expiresAt: string;
-};
-
 class InvalidJsonError extends Error {
   constructor() {
     // 使用明確錯誤型別，讓 controller 可以回傳固定錯誤碼。

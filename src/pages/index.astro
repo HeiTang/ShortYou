@@ -67,7 +67,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
 
       <p id="modeHint" class="text-xs text-slate-400">Playground only: this page returns a mock result and does not call the create API.</p>
-      <div id="recaptcha" class="hidden"></div>
+      <div id="turnstileWidget" class="hidden"></div>
       <p id="result" class="mt-3 break-all text-sm text-cyan-300"></p>
     </div>
   </section>
@@ -78,7 +78,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     import { getFrontendConfig } from '../scripts/config';
     import { initIndexPage } from '../scripts/index-page';
 
-    const { api, recaptchaSiteKey } = getFrontendConfig();
-    initIndexPage({ api, recaptchaSiteKey });
+    const { api, turnstileSiteKey } = getFrontendConfig();
+    initIndexPage({ api, turnstileSiteKey });
   </script>
 </BaseLayout>

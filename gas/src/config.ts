@@ -6,7 +6,7 @@ class AppConfig {
   readonly shortLinksSheetName: string;
   readonly clientsSheetName: string;
   readonly auditLogsSheetName: string;
-  readonly recaptchaSecret: string;
+  readonly turnstileSecret: string;
   readonly enforceCaptcha: boolean;
   readonly enforceAccessControl: boolean;
   readonly aliasPattern: RegExp;
@@ -25,7 +25,11 @@ class AppConfig {
     this.shortLinksSheetName = AppConfig.textProp_(props, 'SHORT_LINKS_SHEET_NAME', fallbackShort);
     this.clientsSheetName = AppConfig.textProp_(props, 'CLIENTS_SHEET_NAME', 'clients');
     this.auditLogsSheetName = AppConfig.textProp_(props, 'AUDIT_LOGS_SHEET_NAME', 'audit_logs');
-    this.recaptchaSecret = AppConfig.textProp_(props, 'RECAPTCHA_SECRET', '');
+    this.turnstileSecret = AppConfig.textProp_(
+      props,
+      'TURNSTILE_SECRET',
+      AppConfig.textProp_(props, 'RECAPTCHA_SECRET', '')
+    );
     this.enforceCaptcha = AppConfig.boolProp_(props, 'ENFORCE_CAPTCHA', true);
     this.enforceAccessControl = AppConfig.boolProp_(props, 'ENFORCE_ACCESS_CONTROL', true);
     this.maxUrlLength = AppConfig.numProp_(props, 'MAX_URL_LENGTH', 2048, 128, 4096);

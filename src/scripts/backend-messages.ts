@@ -9,11 +9,16 @@ const ERROR_TEXT: Record<string, string> = {
   invalid_alias: '自訂短網址格式不正確，請只使用英文小寫、數字、底線或連字號。',
   reserved_alias: '此自訂短網址為保留字，請換一個。',
   invalid_url: 'URL 格式不正確，請以 http/https 開頭。',
-  captcha_required: '請先完成 reCAPTCHA 驗證。',
-  captcha_failed: 'reCAPTCHA 驗證失敗，請再試一次。',
-  'timeout-or-duplicate': 'reCAPTCHA 已逾時，請重新驗證。',
-  'invalid-input-response': 'reCAPTCHA 驗證無效，請重新驗證。',
-  'invalid-input-secret': 'reCAPTCHA 設定錯誤，請通知管理者。'
+  captcha_required: '請先完成 Cloudflare Turnstile 驗證。',
+  captcha_failed: 'Cloudflare Turnstile 驗證失敗，請再試一次。',
+  'timeout-or-duplicate': 'Cloudflare Turnstile 已過期或已使用，請重新驗證。',
+  'missing-input-response': '缺少 Cloudflare Turnstile 驗證資料，請重新驗證。',
+  'invalid-input-response': 'Cloudflare Turnstile 驗證無效，請重新驗證。',
+  'missing-input-secret': 'Cloudflare Turnstile 設定錯誤，請通知管理者。',
+  'invalid-input-secret': 'Cloudflare Turnstile 設定錯誤，請通知管理者。',
+  'bad-request': 'Cloudflare Turnstile 驗證請求格式錯誤，請稍後再試。',
+  'internal-error': 'Cloudflare Turnstile 驗證服務暫時異常，請稍後再試。',
+  turnstile_fetch_failed: '無法連線到 Cloudflare Turnstile 驗證服務，請稍後再試。'
 };
 
 export function humanizeBackendError(

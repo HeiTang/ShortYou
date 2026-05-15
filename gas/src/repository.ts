@@ -85,7 +85,6 @@ class SheetRepository {
     if (row === 0) return { success: false, result: '', error: 'unauthorized_client' };
 
     const now = DateUtil.now();
-    const nowIso = now.toISOString();
     const record: ClientRecord = {
       row,
       clientCode: InputNormalizer.text(clientsSheet.getRange(row, SheetRepository.CLIENT_COL_CODE).getValue()),
@@ -124,13 +123,52 @@ class SheetRepository {
       return { success: false, result: '', error: 'client_quota_exceeded' };
     }
 
-    clientsSheet.getRange(row, SheetRepository.CLIENT_COL_DAILY_USED).setValue(dailyUsed + 1);
-    clientsSheet.getRange(row, SheetRepository.CLIENT_COL_LAST_USED_AT).setValue(nowIso);
     return {
       success: true,
       result: record.clientCode,
       clientCode: record.clientCode,
       ownerName: record.ownerName
+    };
+  }
+
+  consumeClientQuota(clientCode: string): ApiResult {
+    const normalizedCode = InputNormalizer.text(clientCode);
+    if (!normalizedCode) return { success: false, result: '', error: 'missing_client_code' };
+
+    const clientsSheet = this.ensureClientsSheet_();
+    const row = this.findClientRowByCode_(clientsSheet, normalizedCode);
+    if (row === 0) return { success: false, result: '', error: 'client_not_found' };
+
+    const now = DateUtil.now();
+    const nowIso = now.toISOString();
+    const status =
+      InputNormalizer.status(clientsSheet.getRange(row, SheetRepository.CLIENT_COL_STATUS).getValue()) ||
+      'active';
+    if (status !== 'active') return { success: false, result: '', error: 'client_disabled' };
+
+    let dailyUsed = Number(clientsSheet.getRange(row, SheetRepository.CLIENT_COL_DAILY_USED).getValue()) || 0;
+    let quotaResetAt = InputNormalizer.text(
+      clientsSheet.getRange(row, SheetRepository.CLIENT_COL_QUOTA_RESET_AT).getValue()
+    );
+    if (!quotaResetAt || DateUtil.isExpired(quotaResetAt, now)) {
+      dailyUsed = 0;
+      quotaResetAt = DateUtil.nextUtcDayIso(now);
+      clientsSheet.getRange(row, SheetRepository.CLIENT_COL_DAILY_USED).setValue(0);
+      clientsSheet.getRange(row, SheetRepository.CLIENT_COL_QUOTA_RESET_AT).setValue(quotaResetAt);
+    }
+
+    const dailyQuota = Number(clientsSheet.getRange(row, SheetRepository.CLIENT_COL_DAILY_QUOTA).getValue()) || 0;
+    if (dailyQuota > 0 && dailyUsed >= dailyQuota) {
+      return { success: false, result: '', error: 'client_quota_exceeded' };
+    }
+
+    clientsSheet.getRange(row, SheetRepository.CLIENT_COL_DAILY_USED).setValue(dailyUsed + 1);
+    clientsSheet.getRange(row, SheetRepository.CLIENT_COL_LAST_USED_AT).setValue(nowIso);
+
+    return {
+      success: true,
+      result: normalizedCode,
+      clientCode: normalizedCode
     };
   }
 

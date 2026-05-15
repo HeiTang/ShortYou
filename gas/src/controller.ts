@@ -12,6 +12,11 @@ class ApiController {
   ) {}
 
   handleGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextOutput {
+    const action = InputNormalizer.text(e && e.parameter && e.parameter.action).toLowerCase();
+    if (action === 'runtime_config_status') {
+      return json_(getRuntimeConfigStatus());
+    }
+
     const alias = InputNormalizer.text((e && e.parameter && e.parameter.query) || '');
     return json_(this.shortUrlService.resolve(alias));
   }
@@ -26,16 +31,8 @@ class ApiController {
     }
 
     const action = InputNormalizer.text(payload.action).toLowerCase();
-    if (action === 'verify_captcha') return this.handleVerifyCaptcha_(payload);
     // 預設行為為 create，與舊版前端呼叫方式相容。
     return this.handleCreate_(payload);
-  }
-
-  private handleVerifyCaptcha_(payload: Record<string, unknown>): GoogleAppsScript.Content.TextOutput {
-    const token = InputNormalizer.text(payload.token);
-    const ip = InputNormalizer.text(payload.ip);
-    if (!token) return json_({ success: false, result: '', error: 'missing_token' });
-    return json_(this.captchaService.verify(token, ip));
   }
 
   private handleCreate_(payload: Record<string, unknown>): GoogleAppsScript.Content.TextOutput {
@@ -47,7 +44,7 @@ class ApiController {
 
     if (!url) return json_({ success: false, result: '', error: 'missing_url' });
 
-    if (this.config.recaptchaSecret) {
+    if (this.config.turnstileSecret) {
       if (this.config.enforceCaptcha && !token) {
         return json_({ success: false, result: '', error: 'captcha_required' });
       }

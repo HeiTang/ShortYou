@@ -4,7 +4,7 @@ import { fetchIPFromCloudflare, getById, initTxtRotate, postForm, readDecodedHas
 
 type IndexPageConfig = {
   api: string;
-  recaptchaSiteKey?: string;
+  turnstileSiteKey?: string;
 };
 
 type ResolveResponse = {
@@ -21,11 +21,13 @@ type ApiResult = {
 
 type ToastType = 'warn' | 'success' | 'error';
 
+type TurnstileApi = NonNullable<Window['turnstile']>;
+
 export function initIndexPage(config: IndexPageConfig): void {
   if (!config || !config.api) return;
 
   const api = config.api;
-  const recaptchaSiteKey = config.recaptchaSiteKey;
+  const turnstileSiteKey = config.turnstileSiteKey;
   const pageBase = `${window.location.origin}${window.location.pathname}`;
   const hash = readDecodedHash();
 
@@ -38,7 +40,7 @@ export function initIndexPage(config: IndexPageConfig): void {
   const aliasPanel = getById<HTMLElement>('aliasPanel');
   const aliasWrap = getById<HTMLElement>('aliasWrap');
   const submitButton = getById<HTMLButtonElement>('btn');
-  const recaptchaWrap = getById<HTMLElement>('recaptcha');
+  const turnstileWrap = getById<HTMLElement>('turnstileWidget');
   const modeHint = getById<HTMLElement>('modeHint');
   const resultNode = getById<HTMLElement>('result');
   const toast = getById<HTMLElement>('toast');
@@ -51,7 +53,7 @@ export function initIndexPage(config: IndexPageConfig): void {
     !aliasPanel ||
     !aliasWrap ||
     !submitButton ||
-    !recaptchaWrap ||
+    !turnstileWrap ||
     !modeHint ||
     !resultNode ||
     !toast
@@ -60,11 +62,12 @@ export function initIndexPage(config: IndexPageConfig): void {
   }
 
   let capabilityToken = '';
-  let recaptchaToken = '';
-  let captchaVerified = false;
+  let turnstileToken = '';
+  let turnstileVerified = false;
   let ip = '';
   let toastTimer = 0;
-  let recaptchaScriptLoaded = false;
+  let turnstileScriptLoaded = false;
+  let turnstileWidgetId = '';
 
   const aliasController = createAliasUIController({
     inputAlias,
@@ -89,6 +92,13 @@ export function initIndexPage(config: IndexPageConfig): void {
     }, 2600);
   };
 
+  const getTurnstileApi = (): TurnstileApi | null => {
+    const candidate = window.turnstile;
+    if (!candidate) return null;
+    if (typeof candidate.render !== 'function' || typeof candidate.reset !== 'function') return null;
+    return candidate;
+  };
+
   const isAuthorizedMode = (): boolean => capabilityToken.length > 0;
 
   const updateModeHint = (): void => {
@@ -102,7 +112,7 @@ export function initIndexPage(config: IndexPageConfig): void {
     aliasController.syncSubmitButton(submitButton, valid);
     if (isAuthorizedMode()) {
       submitButton.textContent = 'Create';
-      submitButton.disabled = !(valid && captchaVerified);
+      submitButton.disabled = !(valid && turnstileVerified);
       return;
     }
 
@@ -110,34 +120,74 @@ export function initIndexPage(config: IndexPageConfig): void {
     submitButton.disabled = !valid;
   };
 
-  const resetCaptchaState = (): void => {
-    captchaVerified = false;
-    recaptchaToken = '';
+  const clearTurnstileState = (): void => {
+    turnstileVerified = false;
+    turnstileToken = '';
     updateSubmitState();
   };
 
-  const setupRecaptcha = (): void => {
-    if (!recaptchaSiteKey) {
-      showToast('Missing reCAPTCHA site key.', 'error');
+  const resetTurnstileWidget = (): void => {
+    clearTurnstileState();
+    const turnstileApi = getTurnstileApi();
+    if (turnstileWidgetId && turnstileApi) {
+      turnstileApi.reset(turnstileWidgetId);
+    }
+  };
+
+  const renderTurnstileWidget = (): void => {
+    const turnstileApi = getTurnstileApi();
+    if (!turnstileSiteKey || !turnstileApi || turnstileWidgetId) return;
+
+    turnstileWrap.innerHTML = '';
+    turnstileWidgetId = turnstileApi.render(turnstileWrap, {
+      sitekey: turnstileSiteKey,
+      theme: 'dark',
+      callback: (token: string) => {
+        turnstileToken = token;
+        turnstileVerified = true;
+        updateSubmitState();
+        showToast('Cloudflare Turnstile verified.', 'success');
+      },
+      'expired-callback': () => {
+        resetTurnstileWidget();
+        showToast('Cloudflare Turnstile 已過期，請重新驗證。', 'warn');
+      },
+      'error-callback': () => {
+        resetTurnstileWidget();
+        showToast(humanizeBackendError('captcha_failed'), 'error');
+      }
+    });
+  };
+
+  const setupTurnstile = (): void => {
+    if (!turnstileSiteKey) {
+      showToast('Missing Cloudflare Turnstile site key.', 'error');
       return;
     }
 
-    recaptchaWrap.classList.remove('hidden');
-    recaptchaWrap.innerHTML = `<div class="g-recaptcha" data-sitekey="${recaptchaSiteKey}" data-theme="dark" data-callback="verifyCallback"></div>`;
-    if (recaptchaScriptLoaded) return;
+    turnstileWrap.classList.remove('hidden');
+    if (getTurnstileApi()) {
+      renderTurnstileWidget();
+      return;
+    }
+    if (turnstileScriptLoaded) return;
+
+    window.onTurnstileApiLoad = () => {
+      renderTurnstileWidget();
+    };
 
     const script = document.createElement('script');
-    script.src = 'https://www.google.com/recaptcha/api.js';
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileApiLoad';
     script.async = true;
     script.defer = true;
     document.body.appendChild(script);
-    recaptchaScriptLoaded = true;
+    turnstileScriptLoaded = true;
   };
 
   const enterAuthorizedMode = (token: string): void => {
     capabilityToken = token;
     history.replaceState({}, '', '/');
-    setupRecaptcha();
+    setupTurnstile();
     updateModeHint();
     updateSubmitState();
     showToast('Authorized mode enabled.', 'success');
@@ -173,9 +223,6 @@ export function initIndexPage(config: IndexPageConfig): void {
   }
 
   inputUrl.addEventListener('input', () => {
-    if (isAuthorizedMode() && !inputUrl.value.trim().startsWith('http')) {
-      resetCaptchaState();
-    }
     updateSubmitState();
   });
 
@@ -189,10 +236,12 @@ export function initIndexPage(config: IndexPageConfig): void {
     if (!url.startsWith('http')) return;
 
     if (isAuthorizedMode()) {
-      if (!captchaVerified || !recaptchaToken) {
-        showToast('Please verify reCAPTCHA first.', 'error');
+      if (!turnstileVerified || !turnstileToken) {
+        showToast('Please complete Cloudflare Turnstile first.', 'error');
         return;
       }
+
+      const submittedToken = turnstileToken;
 
       try {
         const data = await postForm<ApiResult>(api, {
@@ -200,12 +249,13 @@ export function initIndexPage(config: IndexPageConfig): void {
           url,
           alias: aliasController.isOpen() ? inputAlias.value || undefined : undefined,
           capabilityToken,
-          token: recaptchaToken,
+          token: submittedToken,
           ip
         });
 
         if (!data.success || !data.result) {
-          showToast(humanizeBackendError(data.error, '建立短網址失敗，請稍後再試。'), 'error');
+          const detailedError = (data['error-codes'] && data['error-codes'][0]) || data.error;
+          showToast(humanizeBackendError(detailedError, '建立短網址失敗，請稍後再試。'), 'error');
           return;
         }
 
@@ -215,6 +265,8 @@ export function initIndexPage(config: IndexPageConfig): void {
       } catch {
         showToast(humanizeBackendError('create_failed'), 'error');
         return;
+      } finally {
+        resetTurnstileWidget();
       }
     }
 
@@ -222,27 +274,6 @@ export function initIndexPage(config: IndexPageConfig): void {
     resultNode.innerText = `${pageBase}#${alias}`;
     showToast('Preview only. Fixed mock result returned without calling create API.', 'success');
   });
-
-  window.verifyCallback = (token: string) => {
-    postForm<ApiResult>(api, { action: 'verify_captcha', token, ip })
-      .then((result) => {
-        if (!result.success) {
-          resetCaptchaState();
-          const captchaError = (result['error-codes'] || [result.error || 'captcha_failed'])[0];
-          showToast(humanizeBackendError(captchaError, 'reCAPTCHA 驗證失敗，請再試一次。'), 'error');
-          return;
-        }
-
-        recaptchaToken = token;
-        captchaVerified = true;
-        updateSubmitState();
-        showToast('reCAPTCHA verified.', 'success');
-      })
-      .catch(() => {
-        resetCaptchaState();
-        showToast(humanizeBackendError('captcha_failed'), 'error');
-      });
-  };
 
   updateModeHint();
   updateSubmitState();

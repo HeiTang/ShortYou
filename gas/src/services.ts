@@ -7,12 +7,12 @@ class CaptchaService {
 
   verify(token: string, ip: string): ApiResult {
     // 未設定 secret 時視為略過驗證，交由部署策略控制是否允許。
-    if (!this.config.recaptchaSecret) return { success: true, result: '', skipped: true };
+    if (!this.config.turnstileSecret) return { success: true, result: '', skipped: true };
     try {
-      const response = UrlFetchApp.fetch('https://www.google.com/recaptcha/api/siteverify', {
+      const response = UrlFetchApp.fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
         method: 'post',
         payload: {
-          secret: this.config.recaptchaSecret,
+          secret: this.config.turnstileSecret,
           response: token,
           remoteip: ip || ''
         },
@@ -31,7 +31,7 @@ class CaptchaService {
         success: false,
         result: '',
         error: 'captcha_failed',
-        'error-codes': ['recaptcha_fetch_failed']
+        'error-codes': ['turnstile_fetch_failed']
       };
     }
   }
@@ -93,6 +93,10 @@ class ShortUrlService {
       if (this.repository.aliasExists(normalizedAlias)) {
         return { success: false, result: '', error: 'alias_exists' };
       }
+
+      const quotaResult = this.repository.consumeClientQuota(clientCode);
+      if (!quotaResult.success) return quotaResult;
+
       this.repository.appendShortLink(normalizedAlias, url, clientCode);
       return { success: true, result: normalizedAlias };
     });
@@ -109,6 +113,10 @@ class ShortUrlService {
         for (let i = 0; i < this.config.randomAliasTryPerLength; i += 1) {
           const candidate = RandomUtil.randomAlias(length);
           if (this.repository.aliasExists(candidate)) continue;
+
+          const quotaResult = this.repository.consumeClientQuota(clientCode);
+          if (!quotaResult.success) return quotaResult;
+
           this.repository.appendShortLink(candidate, url, clientCode);
           return { success: true, result: candidate };
         }
@@ -122,11 +130,60 @@ class ShortUrlService {
     if (url.length > this.config.maxUrlLength) return false;
     // 阻擋試算表常見公式注入起始字元。
     if (/^[=+\-@]/.test(url)) return false;
-    try {
-      const parsed = new URL(url);
-      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-    } catch (_err) {
-      return false;
+
+    const authority = url.replace(/^https?:\/\//i, '').split(/[/?#]/, 1)[0];
+    if (!authority || authority.includes('@')) return false;
+
+    const host = this.extractHost_(authority);
+    if (!host) return false;
+    if (host === 'localhost') return true;
+    if (this.isValidIpv4Host_(host)) return true;
+    if (this.isValidIpv6Host_(host)) return true;
+    return this.isValidDomainHost_(host);
+  }
+
+  private extractHost_(authority: string): string {
+    if (/^\[[0-9a-f:]+\](?::\d+)?$/i.test(authority)) {
+      const closingIndex = authority.indexOf(']');
+      return authority.slice(0, closingIndex + 1);
     }
+
+    const portMatch = authority.match(/^(.*):(\d+)$/);
+    return portMatch ? portMatch[1] : authority;
+  }
+
+  private isValidIpv4Host_(host: string): boolean {
+    const segments = host.split('.');
+    if (segments.length !== 4) return false;
+
+    return segments.every((segment) => {
+      if (!/^\d{1,3}$/.test(segment)) return false;
+      const value = Number(segment);
+      return value >= 0 && value <= 255;
+    });
+  }
+
+  private isValidIpv6Host_(host: string): boolean {
+    return /^\[[0-9a-f:]+\]$/i.test(host);
+  }
+
+  private isValidDomainHost_(host: string): boolean {
+    if (host.length > 253) return false;
+    if (host.startsWith('.') || host.endsWith('.')) return false;
+    if (host.includes('..')) return false;
+
+    const labels = host.split('.');
+    if (labels.length < 2) return false;
+
+    if (!labels.every((label) => this.isValidDomainLabel_(label))) return false;
+
+    const topLevelLabel = labels[labels.length - 1];
+    return /[a-z]/i.test(topLevelLabel);
+  }
+
+  private isValidDomainLabel_(label: string): boolean {
+    if (!label || label.length > 63) return false;
+    if (label.startsWith('-') || label.endsWith('-')) return false;
+    return /^[a-z0-9-]+$/i.test(label);
   }
 }

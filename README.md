@@ -2,186 +2,79 @@
 <div align="center">
   <h1>✨ ShortYou</h1>
   <a href="https://github.com/HeiTang/ShortYou/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/HeiTang/ShortYou?color=orange">
+    <img src="https://img.shields.io/github/license/HeiTang/ShortYou?color=orange" alt="License">
   </a>
   <a href="https://github.com/HeiTang/ShortYou/releases">
-    <img src="https://img.shields.io/github/v/release/HeiTang/ShortYou?color=brightgreen">
+    <img src="https://img.shields.io/github/v/release/HeiTang/ShortYou?color=brightgreen" alt="Release">
   </a>
   <a href="https://github.com/HeiTang/ShortYou">
-    <img src="https://img.shields.io/github/stars/HeiTang/ShortYou?color=ff69b4">
-  </a>
-  <a href="https://t.purr.tw">
-    <img src="https://f1qe4wyq4m9j.runkit.sh">
+    <img src="https://img.shields.io/github/stars/HeiTang/ShortYou?color=ff69b4" alt="GitHub stars">
   </a>
   <br><br>
   <img src="https://readme-typing-svg.herokuapp.com?font=Changa&color=00F71A&size=30&center=true&vCenter=true&height=60&lines=Too+Long%3F+Shorten+it!;Too+Height%3F++Shorten+it!;Too+Fat%3F++Shorten+it!;30cm%3F++Shorten+it!">
-  <img src="./docs/demo/page.png">
+  <img src="./docs/demo/page.png" alt="ShortYou homepage preview">
   <p>- - -</p>
-  <p><i>“ ShortYou is a URL Shortener. ”</i></p>
+  <p><i>“ ShortYou is a lightweight URL Shortener. ”</i></p>
   <p>ShortYou can shorten the lengthy URL and easy to share link with other people.</p>
 </div>
 
+<p align="center">
+  English | <a href="./README.zh-TW.md">繁體中文</a>
+</p>
+
+## Overview
+
+ShortYou is a lightweight URL shortener with a simple public-facing experience and a controlled link creation flow.
+
+- Public visitors can open existing short links directly.
+
+- Invited users can create new short links through a dedicated entry link.
+
+- Maintainers can self-host the frontend and backend separately.
+
 ## Features
 
-- 💰 Zero Cost
+- ⭐️ Lightweight and self-hostable
 
-- ✨ Beautiful Website
+- ⚙️ Custom aliases when needed
 
-- 🔧 Customize Link
+- 🔒 Controlled create flow for invited users
 
-- ☁ Run on Github Page and Google Apps Script
+- 🖥️ Split frontend and backend deployment
 
-## Usage
+## Quick Start
 
-1. Open homepage: [ShortYou](https://t.purr.tw/)
-2. Public redirect: `https://t.purr.tw/#<alias>`
-3. Homepage playground (unauthorized): generate fake links for demo only
-4. Authorized create mode: `https://t.purr.tw/#t=<capabilityToken>`
+1. Visit [https://t.purr.tw/](https://t.purr.tw/) to open the homepage.
 
-## Frontend (Astro + Tailwind + GitHub Pages)
+2. Existing short links look like `https://t.purr.tw/#your-alias`.
 
-- Source: `src/pages/index.astro`
-- Build: `npm run build:frontend`
-- Output: `dist/`
-- Deploy workflow: `.github/workflows/pages.yml`
+3. If you receive an invite link, open it to enter create mode.
 
-### Frontend behavior
+4. The public playground is for demo only and does not create real short links.
 
-- Homepage (`/`):
-  - `#t=<token>` → authorized create mode on the same page
-  - `#alias` → query backend and redirect
-  - no hash → fake short-link playground (frontend returns a fixed mock result only, no create API request)
-- Single homepage only, no secondary frontend route.
-- No jQuery dependency.
+## Self-Hosting
 
-## Google Apps Script Backend (clasp + TypeScript)
+ShortYou uses a simple split setup that is friendly to small personal deployments.
 
-- TypeScript source: `gas/src/*.ts` (entrypoint: `gas/src/entrypoints.ts`)
-- Generated runtime file: `gas/Code.js`
-- `gas/Code.js` is generated during build/deploy and is not tracked in Git.
-- Build command: `npm run build:gas`
-- Code review target: **`gas/src/*.ts`** (`gas/Code.js` is generated artifact, do not edit manually)
-- Full backend spec (Traditional Chinese): `docs/backend-spec.zh-TW.md`
+- Frontend: GitHub Pages
 
-### Deploy
+- Backend: Google Apps Script
 
-1. Install dependencies and build:
+- Storage: Google Sheets
 
-    ```bash
-    npm install
-    npm run build:gas
-    ```
+For setup steps and operational details, start with the maintainer documentation.
 
-2. Login clasp:
+## Documentation
 
-    ```bash
-    npm i -g @google/clasp
-    clasp login
-    ```
+- [docs/maintainer-guide.zh-TW.md](docs/maintainer-guide.zh-TW.md) - Maintainer guide and self-hosting entry point (Traditional Chinese).
+- [docs/backend-spec.zh-TW.md](docs/backend-spec.zh-TW.md) - Backend specification for maintainers (Traditional Chinese).
 
-3. Create `gas/.clasp.json` and set `scriptId`:
+## Contributing
 
-    ```bash
-    cp gas/.clasp.json.example gas/.clasp.json
-    ```
+Issues and pull requests are welcome.
 
-4. Push and deploy:
+If you update documentation, keep the root README user-facing and move operational details into the docs directory.
 
-    ```bash
-    cd gas
-    clasp push
-    clasp deploy --description "shortyou-backend"
-    ```
+## License
 
-### Script Properties
-
-- `RECAPTCHA_SECRET`
-- `ENFORCE_CAPTCHA` (`true` / `false`)
-- `ENFORCE_ACCESS_CONTROL` (`true` / `false`)
-- `PUBLIC_SITE_URL` (default: `https://t.purr.tw`)
-- `SHORT_LINKS_SHEET_NAME` (default: `short_links`)
-- `CLIENTS_SHEET_NAME` (default: `clients`)
-- `AUDIT_LOGS_SHEET_NAME` (default: `audit_logs`)
-- `DEFAULT_DAILY_QUOTA` (default: `0`, means unlimited)
-- `RESERVED_ALIASES` (comma-separated)
-
-### Google Sheets schema
-
-1. `short_links`
-   - `alias`, `url`, `clicks`, `created_by_client`, `status`, `created_at`, `updated_at`, `last_access_at`
-2. `clients`
-   - `client_code`, `owner_name`, `status`, `capability_token_hash`, `token_hint`, `issued_at`, `expires_at`, `daily_quota`, `daily_used`, `quota_reset_at`, `last_used_at`, `note`
-3. `audit_logs`
-   - `time`, `event`, `client_code`, `ip`, `result`, `reason`
-
-### API actions
-
-- `POST action=verify_captcha`
-- `POST action=create` (default if `url` exists)
-- `GET ?query=<alias>` for redirect lookup
-
-### Capability workflow
-
-1. Admin generates capability link:
-
-    ```javascript
-  issueCapabilityLink('alice', '2026-12-31T23:59:59.000Z', 10, 'issued manually');
-    ```
-
-2. Backend returns dedicated create link:
-
-    ```text
-  https://t.purr.tw/#t=<capabilityToken>
-    ```
-
-3. User creates short URL with capability token:
-
-    ```bash
-    curl -X POST "$GAS_WEBAPP_URL" \
-      -d "action=create" \
-      -d "url=https://github.com/HeiTang/ShortYou" \
-      -d "alias=shortyou" \
-      -d "token=RECAPTCHA_TOKEN" \
-      -d "ip=1.2.3.4" \
-      -d "capabilityToken=CAPABILITY_TOKEN"
-    ```
-
-### Admin helper functions (GAS editor)
-
-```javascript
-issueCapabilityLink('alice', '2026-12-31T23:59:59.000Z', 10, 'issued manually');
-disableClient('c_xxxxxxx');
-rotateClientToken('c_xxxxxxx');
-```
-
-## CI/CD (GitHub Actions)
-
-- Backend GAS pipeline: `.github/workflows/gas-cicd.yml`
-- Frontend Pages pipeline: `.github/workflows/pages.yml`
-
-Required secrets for GAS deploy:
-
-- `CLASPRC_JSON`
-- `GAS_SCRIPT_ID`
-- `GAS_DEPLOYMENT_ID` (optional)
-
-## Security baseline
-
-- Only homepage is intended for indexing.
-- Capability token is only used for create API authorization.
-- Token is stored hashed in Sheets (`sha256`) and cannot be recovered.
-- Access control is "anti-abuse oriented", not strict identity authentication.
-
-## Todo
-
-- [x] reCAPTCHA 
-
-- [ ] QR Code
-
-- [x] Record IP
-
-- [ ] Refactor Random Generator
-
-## See Also
-
-- [littlechintw / Short-Text-Tool](https://github.com/littlechintw/Short-Text-Tool) - This is a web application that can let the Text change to a short URL and easy to share! 
+This project is licensed under the [MIT License](LICENSE).

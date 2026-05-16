@@ -1,0 +1,29 @@
+{
+  "name": "shortyou",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ShortYou frontend and GAS backend pipeline",
+  "scripts": {
+    "build": "npm run build:gas",
+    "build:gas": "tsc --project tsconfig.gas.json && node scripts/build-gas.mjs",
+    "typecheck:gas": "tsc --noEmit --project tsconfig.gas.json",
+    "check:gas": "node --check gas/Code.js && test -f gas/appsscript.json",
+    "gas:push": "node scripts/push-gas.mjs",
+    "gas:push:local": "node scripts/push-gas.mjs --env local",
+    "gas:push:production": "node scripts/push-gas.mjs --env production",
+    "gas:deploy": "node scripts/push-gas.mjs --deploy",
+    "gas:deploy:local": "node scripts/push-gas.mjs --env local --deploy",
+    "gas:deploy:production": "node scripts/push-gas.mjs --env production --deploy",
+    "dev:frontend": "node scripts/run-frontend.mjs dev --env local",
+    "build:frontend": "node scripts/run-frontend.mjs build --env production",
+    "preview:frontend": "node scripts/run-frontend.mjs preview --env production",
+    "build:all": "npm run build:gas && npm run build:frontend"
+  },
+  "devDependencies": {
+    "@astrojs/tailwind": "^6.0.2",
+    "@types/google-apps-script": "^2.0.8",
+    "astro": "^5.10.2",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.9.3"
+  }
+}

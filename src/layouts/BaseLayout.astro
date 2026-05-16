@@ -1,0 +1,44 @@
+---
+import '../styles/global.css';
+import Footer from '../components/common/Footer.astro';
+import Header from '../components/common/Header.astro';
+
+type Props = {
+  title: string;
+  description: string;
+  robots: string;
+  canonical?: string;
+};
+
+const {
+  title,
+  description,
+  robots,
+  canonical = 'https://t.purr.tw/'
+} = Astro.props as Props;
+---
+
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.ico" />
+    <slot name="head" />
+  </head>
+  <body class="min-h-screen bg-zinc-900 text-slate-100">
+    <main class="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-5">
+      <Header />
+
+      <slot />
+
+      <Footer />
+    </main>
+
+    <slot name="afterMain" />
+  </body>
+</html>

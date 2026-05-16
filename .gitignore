@@ -1,4 +1,13 @@
 **/.DS_Store
 **/.git
 **/__pycache__
-
+**/.clasprc.json
+**/.clasp.json
+**/node_modules
+**/.astro
+**/dist
+/.gas-build
+/gas/Code.js
+/gas/SyncConfig.js
+/.env.dev
+/.env.prod

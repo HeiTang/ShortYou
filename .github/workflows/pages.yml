@@ -6,7 +6,10 @@ on:
     paths:
       - 'src/**'
       - 'public/**'
+      - 'scripts/**'
       - 'astro.config.mjs'
+      - 'tailwind.config.mjs'
+      - 'tsconfig.json'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/pages.yml'
@@ -39,6 +42,9 @@ jobs:
 
       - name: Build Astro site
         run: npm run build:frontend
+        env:
+          PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL || secrets.PUBLIC_API_URL }}
+          PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.PUBLIC_TURNSTILE_SITE_KEY || secrets.PUBLIC_TURNSTILE_SITE_KEY }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

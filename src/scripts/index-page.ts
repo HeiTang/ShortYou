@@ -186,7 +186,7 @@ export function initIndexPage(config: IndexPageConfig): void {
 
   const enterAuthorizedMode = (token: string): void => {
     capabilityToken = token;
-    history.replaceState({}, '', '/');
+    history.replaceState({}, '', `${window.location.pathname}${window.location.search}`);
     setupTurnstile();
     updateModeHint();
     updateSubmitState();

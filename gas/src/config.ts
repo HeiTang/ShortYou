@@ -50,7 +50,7 @@ class AppConfig {
     );
     this.defaultDailyQuota = AppConfig.numProp_(props, 'DEFAULT_DAILY_QUOTA', 0, 0, 500000);
     this.capabilityTokenLength = AppConfig.numProp_(props, 'CAPABILITY_TOKEN_LENGTH', 64, 32, 256);
-    this.publicSiteUrl = AppConfig.textProp_(props, 'PUBLIC_SITE_URL', 'https://t.purr.tw').replace(
+    this.publicSiteUrl = AppConfig.textProp_(props, 'PUBLIC_SITE_URL', '').replace(
       /\/$/,
       ''
     );
@@ -104,6 +104,9 @@ class AppConfig {
 
   capabilityLink(capabilityToken: string): string {
     // 對外只發放首頁 token 入口，前端讀到 #t= 後切換為真實建立模式。
+    if (!this.publicSiteUrl) {
+      throw new Error('Missing required Script Property: PUBLIC_SITE_URL');
+    }
     return `${this.publicSiteUrl}/#t=${encodeURIComponent(capabilityToken)}`;
   }
 }

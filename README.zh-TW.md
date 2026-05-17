@@ -57,9 +57,9 @@ ShortYou 是一個輕量、可自行部署的短網址服務，採用前後端�
 
 ## 快速使用
 
-1. 開啟 [https://t.purr.tw/](https://t.purr.tw/) 進入首頁。
+1. 開啟 [https://s.purr.tw/](https://s.purr.tw/) 進入首頁。
 
-2. 已建立的短連結格式如 `https://t.purr.tw/#your-alias`。
+2. 已建立的短連結格式如 `https://s.purr.tw/#your-alias`。
 
 3. 如果你收到專屬建立連結，開啟後即可進入授權建立模式。
 

@@ -58,9 +58,9 @@ ShortYou is a lightweight, self-hostable URL shortener with a split frontend/bac
 
 ## Quick Start
 
-1. Visit [https://t.purr.tw/](https://t.purr.tw/) to open the homepage.
+1. Visit [https://s.purr.tw/](https://s.purr.tw/) to open the homepage.
 
-2. Existing short links look like `https://t.purr.tw/#your-alias`.
+2. Existing short links look like `https://s.purr.tw/#your-alias`.
 
 3. If you receive a dedicated create link, open it to enter authorized create mode.
 

@@ -14,7 +14,7 @@ const {
   title,
   description,
   robots,
-  canonical = 'https://t.purr.tw/'
+  canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).toString() : ''
 } = Astro.props as Props;
 ---
 
@@ -26,7 +26,7 @@ const {
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="robots" content={robots} />
-    <link rel="canonical" href={canonical} />
+    {canonical && <link rel="canonical" href={canonical} />}
     <link rel="icon" href="/favicon.ico" />
     <slot name="head" />
   </head>

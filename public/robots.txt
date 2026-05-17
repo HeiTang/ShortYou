@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://t.purr.tw/sitemap-index.xml

@@ -40,6 +40,6 @@ if (result.status !== 0) {
   throw new Error(`Frontend command failed: astro ${astroCommand}`);
 }
 
-if (astroCommand === 'build' || astroCommand === 'preview') {
+if (astroCommand === 'build') {
   await writeFrontendSiteArtifacts(path.join(rootDir, 'dist'), publicSiteUrl);
 }

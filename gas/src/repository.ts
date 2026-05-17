@@ -185,6 +185,8 @@ class SheetRepository {
     const row = this.findClientRowByCode_(clientsSheet, clientCode);
     if (row === 0) return { success: false, result: '', error: 'client_not_found' };
 
+    this.config.requirePublicSiteUrl();
+
     const capabilityToken = RandomUtil.randomToken(this.config.capabilityTokenLength);
     const capabilityTokenHash = DigestUtil.sha256Hex(capabilityToken);
     const nowIso = DateUtil.nowIso();
@@ -234,6 +236,8 @@ class SheetRepository {
     const quotaResetAt = DateUtil.nextUtcDayIso(now);
     const tokenHint = `${capabilityToken.slice(0, 6)}...`;
     const note = InputNormalizer.text(noteInput);
+
+    this.config.requirePublicSiteUrl();
 
     const clientsSheet = this.ensureClientsSheet_();
     clientsSheet.appendRow([

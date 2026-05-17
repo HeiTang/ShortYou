@@ -102,11 +102,15 @@ class AppConfig {
     return Math.min(max, Math.max(min, Math.floor(parsed)));
   }
 
-  capabilityLink(capabilityToken: string): string {
-    // 對外只發放首頁 token 入口，前端讀到 #t= 後切換為真實建立模式。
+  requirePublicSiteUrl(): string {
     if (!this.publicSiteUrl) {
       throw new Error('Missing required Script Property: PUBLIC_SITE_URL');
     }
-    return `${this.publicSiteUrl}/#t=${encodeURIComponent(capabilityToken)}`;
+    return this.publicSiteUrl;
+  }
+
+  capabilityLink(capabilityToken: string): string {
+    // 對外只發放首頁 token 入口，前端讀到 #t= 後切換為真實建立模式。
+    return `${this.requirePublicSiteUrl()}/#t=${encodeURIComponent(capabilityToken)}`;
   }
 }

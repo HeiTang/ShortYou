@@ -35,8 +35,8 @@ export const requirePublicSiteUrl = (env = process.env, prefix = 'Missing requir
 export const buildCnameText = (siteUrl) => `${new URL(normalizeSiteUrl(siteUrl)).hostname}\n`;
 
 export const buildRobotsTxt = (siteUrl) => {
-  const normalizedSiteUrl = normalizeSiteUrl(siteUrl);
-  return `User-agent: *\nAllow: /\n\nSitemap: ${normalizedSiteUrl}/sitemap-index.xml\n`;
+  normalizeSiteUrl(siteUrl);
+  return 'User-agent: *\nAllow: /\n';
 };
 
 export const writeFrontendSiteArtifacts = async (outDir, siteUrl) => {

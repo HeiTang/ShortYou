@@ -93,7 +93,6 @@ function buildRuntimeContext_(): {
   // GAS 暖實例會重用全域物件；每次呼叫都重建 context 才能確保吃到最新 Script Properties。
   const appConfig = AppConfig.load();
   const sheetRepository = new SheetRepository(appConfig);
-  sheetRepository.ensureSchema();
 
   const shortUrlService = new ShortUrlService(sheetRepository, appConfig);
   const captchaService = new CaptchaService(appConfig);

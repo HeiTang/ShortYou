@@ -4,12 +4,24 @@ on:
   pull_request:
     paths:
       - 'gas/**'
+      - 'scripts/build-gas.mjs'
+      - 'scripts/env-utils.mjs'
+      - 'scripts/push-gas.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.gas.json'
       - '.github/workflows/gas-cicd.yml'
   push:
     branches:
       - main
     paths:
       - 'gas/**'
+      - 'scripts/build-gas.mjs'
+      - 'scripts/env-utils.mjs'
+      - 'scripts/push-gas.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.gas.json'
       - '.github/workflows/gas-cicd.yml'
   workflow_dispatch:
 
@@ -54,7 +66,7 @@ jobs:
     needs: validate
     environment: production
     env:
-      PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
+      PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL || secrets.PUBLIC_API_URL }}
       GAS_PUBLIC_SITE_URL: ${{ vars.GAS_PUBLIC_SITE_URL }}
       GAS_ENFORCE_CAPTCHA: ${{ vars.GAS_ENFORCE_CAPTCHA || 'true' }}
       GAS_ENFORCE_ACCESS_CONTROL: ${{ vars.GAS_ENFORCE_ACCESS_CONTROL || 'true' }}
@@ -96,14 +108,21 @@ jobs:
             GAS_ENFORCE_CAPTCHA \
             GAS_ENFORCE_ACCESS_CONTROL \
             GAS_SCRIPT_ID \
-            GAS_DEPLOYMENT_ID \
-            GAS_TURNSTILE_SECRET
+            GAS_DEPLOYMENT_ID
           do
             if [ -z "${!name}" ]; then
               echo "Missing required deploy input: $name"
               missing=1
             fi
           done
+          case "$(printf '%s' "$GAS_ENFORCE_CAPTCHA" | tr '[:upper:]' '[:lower:]')" in
+            true)
+              if [ -z "$GAS_TURNSTILE_SECRET" ]; then
+                echo "Missing required deploy input: GAS_TURNSTILE_SECRET"
+                missing=1
+              fi
+              ;;
+          esac
           if [ "$missing" -ne 0 ]; then
             exit 1
           fi

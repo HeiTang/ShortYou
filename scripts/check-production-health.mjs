@@ -170,6 +170,10 @@ const writeStepSummary = async (status, summary, errors) => {
 
 const createFailure = (message, extra = {}) => Object.assign(new Error(message), extra);
 
+const asRecord = (value) => {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : null;
+};
+
 const frontendUrl = readText(
   readOptionValue('--frontend-url'),
   process.env.HEALTHCHECK_FRONTEND_URL,
@@ -214,6 +218,7 @@ if (!frontendUrl) {
 const runOnce = async () => {
   const liveTarget = await collectLiveFrontendTarget(frontendUrl);
   const runtimeStatus = await fetchRuntimeStatus(liveTarget.liveApiUrl);
+  const runtimeStatusRecord = asRecord(runtimeStatus);
   const summary = {
     checkedAt: new Date().toISOString(),
     frontendUrl: liveTarget.frontendUrl,
@@ -238,20 +243,22 @@ const runOnce = async () => {
     );
   }
 
-  if (!runtimeStatus || runtimeStatus.success !== true) {
+  if (!runtimeStatusRecord || runtimeStatusRecord.success !== true) {
     errors.push(`runtime_config_status returned unexpected payload: ${JSON.stringify(runtimeStatus)}`);
   }
 
-  if (String(runtimeStatus.environment || '') !== expectedEnvironment) {
-    errors.push(
-      `runtime environment mismatch: expected ${expectedEnvironment} but found ${String(runtimeStatus.environment || '')}`
-    );
-  }
+  if (runtimeStatusRecord) {
+    if (String(runtimeStatusRecord.environment || '') !== expectedEnvironment) {
+      errors.push(
+        `runtime environment mismatch: expected ${expectedEnvironment} but found ${String(runtimeStatusRecord.environment || '')}`
+      );
+    }
 
-  if (normalizeSiteUrl(readText(runtimeStatus.publicSiteUrl)) !== expectedPublicSiteUrl) {
-    errors.push(
-      `runtime public site url mismatch: expected ${expectedPublicSiteUrl} but found ${String(runtimeStatus.publicSiteUrl || '')}`
-    );
+    if (normalizeSiteUrl(readText(runtimeStatusRecord.publicSiteUrl)) !== expectedPublicSiteUrl) {
+      errors.push(
+        `runtime public site url mismatch: expected ${expectedPublicSiteUrl} but found ${String(runtimeStatusRecord.publicSiteUrl || '')}`
+      );
+    }
   }
 
   if (errors.length > 0) {

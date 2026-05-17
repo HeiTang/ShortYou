@@ -85,21 +85,32 @@ function applyPendingRuntimeConfig_(): void {
 
 applyPendingRuntimeConfig_();
 
-const appConfig = AppConfig.load();
-const sheetRepository = new SheetRepository(appConfig);
-sheetRepository.ensureSchema();
+function buildRuntimeContext_(): {
+  repository: SheetRepository;
+  shortUrlService: ShortUrlService;
+  apiController: ApiController;
+} {
+  // GAS 暖實例會重用全域物件；每次呼叫都重建 context 才能確保吃到最新 Script Properties。
+  const appConfig = AppConfig.load();
+  const sheetRepository = new SheetRepository(appConfig);
+  sheetRepository.ensureSchema();
 
-const shortUrlService = new ShortUrlService(sheetRepository, appConfig);
-const captchaService = new CaptchaService(appConfig);
-const accessControlService = new AccessControlService(sheetRepository, appConfig);
-// 單一 ApiController 負責整體 HTTP 請求分派。
-const apiController = new ApiController(
-  appConfig,
-  sheetRepository,
-  shortUrlService,
-  captchaService,
-  accessControlService
-);
+  const shortUrlService = new ShortUrlService(sheetRepository, appConfig);
+  const captchaService = new CaptchaService(appConfig);
+  const accessControlService = new AccessControlService(sheetRepository, appConfig);
+
+  return {
+    repository: sheetRepository,
+    shortUrlService,
+    apiController: new ApiController(
+      appConfig,
+      sheetRepository,
+      shortUrlService,
+      captchaService,
+      accessControlService
+    )
+  };
+}
 
 function applyScriptProperties_(propertyMap: JsonObject): {
   unknownKeys: string[];
@@ -137,23 +148,25 @@ function applyScriptProperties_(propertyMap: JsonObject): {
 }
 
 function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.Content.TextOutput {
-  return apiController.handleGet(e);
+  return buildRuntimeContext_().apiController.handleGet(e);
 }
 
 function doPost(e: GoogleAppsScript.Events.DoPost): GoogleAppsScript.Content.TextOutput {
-  return apiController.handlePost(e);
+  return buildRuntimeContext_().apiController.handlePost(e);
 }
 
 function disableClient(clientCode: string): ApiResult {
   const normalizedCode = InputNormalizer.text(clientCode);
   if (!normalizedCode) return { success: false, result: '', error: 'missing_client_code' };
-  return sheetRepository.withScriptLock(() => sheetRepository.disableClient(normalizedCode));
+  const { repository } = buildRuntimeContext_();
+  return repository.withScriptLock(() => repository.disableClient(normalizedCode));
 }
 
 function rotateClientToken(clientCode: string): ApiResult {
   const normalizedCode = InputNormalizer.text(clientCode);
   if (!normalizedCode) return { success: false, result: '', error: 'missing_client_code' };
-  return sheetRepository.withScriptLock(() => sheetRepository.rotateClientToken(normalizedCode));
+  const { repository } = buildRuntimeContext_();
+  return repository.withScriptLock(() => repository.rotateClientToken(normalizedCode));
 }
 
 function issueCapabilityLink(
@@ -162,9 +175,8 @@ function issueCapabilityLink(
   dailyQuota: number,
   note: string
 ): ApiResult {
-  const result = sheetRepository.withScriptLock(() =>
-    sheetRepository.issueCapabilityLink(ownerName, expiresAtIso, dailyQuota, note)
-  );
+  const { repository } = buildRuntimeContext_();
+  const result = repository.withScriptLock(() => repository.issueCapabilityLink(ownerName, expiresAtIso, dailyQuota, note));
 
   // Apps Script 編輯器手動執行時，回傳值不一定會直接顯示；同步寫入執行記錄方便複製完整 link。
   Logger.log(JSON.stringify(result));
@@ -172,7 +184,7 @@ function issueCapabilityLink(
 }
 
 function query(alias: string): GoogleAppsScript.Content.TextOutput {
-  return json_(shortUrlService.resolve(alias));
+  return json_(buildRuntimeContext_().shortUrlService.resolve(alias));
 }
 
 function add(
@@ -190,7 +202,7 @@ function add(
     ip,
     capabilityToken: id
   };
-  return apiController.handlePost({
+  return buildRuntimeContext_().apiController.handlePost({
     parameter: payload as Record<string, string>,
     postData: {
       contents: '',
@@ -259,9 +271,8 @@ function upsertClient(
   dailyQuota: number,
   note: string
 ): ApiResult {
-  return sheetRepository.withScriptLock(() =>
-    sheetRepository.upsertClient(clientCode, ownerName, capabilityToken, expiresAtIso, dailyQuota, note)
-  );
+  const { repository } = buildRuntimeContext_();
+  return repository.withScriptLock(() => repository.upsertClient(clientCode, ownerName, capabilityToken, expiresAtIso, dailyQuota, note));
 }
 
 function json_(obj: JsonObject | ApiResult): GoogleAppsScript.Content.TextOutput {

@@ -58,9 +58,9 @@ ShortYou is a lightweight, self-hostable URL shortener with a split frontend/bac
 
 ## Quick Start
 
-1. Visit [https://t.purr.tw/](https://t.purr.tw/) to open the homepage.
+1. Visit [https://s.purr.tw/](https://s.purr.tw/) to open the homepage.
 
-2. Existing short links look like `https://t.purr.tw/#your-alias`.
+2. Existing short links look like `https://s.purr.tw/#your-alias`.
 
 3. If you receive a dedicated create link, open it to enter authorized create mode.
 
@@ -142,12 +142,14 @@ ShortYou uses split deployment by default, so the frontend can stay on static ho
 
 ### 1. Prepare environment settings
 
-- For the frontend, you need at least `PUBLIC_API_URL` and `PUBLIC_TURNSTILE_SITE_KEY`.
+- For the frontend, you need `PUBLIC_API_URL`, `PUBLIC_TURNSTILE_SITE_KEY`, and either `PUBLIC_SITE_URL` or `GAS_PUBLIC_SITE_URL`.
 
   | Parameter | Description | Default |
   | --- | --- | --- |
   | `PUBLIC_API_URL` | Public URL of the GAS Web App | None |
   | `PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key | None |
+  | `PUBLIC_SITE_URL` | Public frontend site URL used for Astro site metadata and generated deploy artifacts | None |
+  | `GAS_PUBLIC_SITE_URL` | Compatible fallback for the same frontend site URL in shared CI/deploy environments | None |
 
 - For the backend, you need at least `GAS_SCRIPT_ID`, `GAS_PUBLIC_SITE_URL`, `GAS_ENFORCE_CAPTCHA`, and `GAS_ENFORCE_ACCESS_CONTROL`.
 
@@ -168,6 +170,7 @@ ShortYou uses split deployment by default, so the frontend can stay on static ho
 - Deploy `dist/` to GitHub Pages or another static host.
 
 - The frontend connects to the target GAS Web App through `PUBLIC_API_URL`.
+- Generated deploy artifacts such as `dist/CNAME` and `dist/robots.txt` use `PUBLIC_SITE_URL` first and fall back to `GAS_PUBLIC_SITE_URL`.
 
 ### 3. Push or deploy the backend
 

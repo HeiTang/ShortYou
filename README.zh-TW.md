@@ -57,9 +57,9 @@ ShortYou 是一個輕量、可自行部署的短網址服務，採用前後端�
 
 ## 快速使用
 
-1. 開啟 [https://t.purr.tw/](https://t.purr.tw/) 進入首頁。
+1. 開啟 [https://s.purr.tw/](https://s.purr.tw/) 進入首頁。
 
-2. 已建立的短連結格式如 `https://t.purr.tw/#your-alias`。
+2. 已建立的短連結格式如 `https://s.purr.tw/#your-alias`。
 
 3. 如果你收到專屬建立連結，開啟後即可進入授權建立模式。
 
@@ -141,12 +141,14 @@ ShortYou 預設採前後端分離部署，這樣可以讓前端維持靜態托�
 
 ### 1. 準備環境設定
 
-- 以前端來說，至少需要 `PUBLIC_API_URL` 與 `PUBLIC_TURNSTILE_SITE_KEY`。
+- 以前端來說，需要 `PUBLIC_API_URL`、`PUBLIC_TURNSTILE_SITE_KEY`，以及 `PUBLIC_SITE_URL` 或 `GAS_PUBLIC_SITE_URL` 其中之一。
 
   ｜ 參數 | 說明 | 預設值 |
   | --- | --- | --- |
   | `PUBLIC_API_URL` | GAS Web App 的公開 URL | 無 |
   | `PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile 的 site key | 無 |
+  | `PUBLIC_SITE_URL` | 前端站點公開 URL，供 Astro site metadata 與部署產物生成使用 | 無 |
+  | `GAS_PUBLIC_SITE_URL` | 在共用 CI／部署環境中可作為相容替代值的前端站點 URL | 無 |
 
 - 以後端來說，至少需要 `GAS_SCRIPT_ID`、`GAS_PUBLIC_SITE_URL`、`GAS_ENFORCE_CAPTCHA`、`GAS_ENFORCE_ACCESS_CONTROL`。
 
@@ -167,6 +169,7 @@ ShortYou 預設採前後端分離部署，這樣可以讓前端維持靜態托�
 - 將 `dist/` 部署到 GitHub Pages 或其他靜態主機。
 
 - 前端會依 `PUBLIC_API_URL` 連到對應的 GAS Web App。
+- `dist/CNAME` 與 `dist/robots.txt` 等部署產物會優先使用 `PUBLIC_SITE_URL`，若未提供則回退到 `GAS_PUBLIC_SITE_URL`。
 
 ### 3. 推送或發版後端
 

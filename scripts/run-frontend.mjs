@@ -1,5 +1,7 @@
 import { spawnSync } from 'node:child_process';
+import path from 'node:path';
 import { loadAppEnv, omitOption, requireEnvText, resolveAppEnv } from './env-utils.mjs';
+import { requirePublicSiteUrl, writeFrontendSiteArtifacts } from './site-url.mjs';
 
 const rootDir = process.cwd();
 const argv = process.argv.slice(2);
@@ -14,6 +16,7 @@ const commandArgs = argv.slice(1);
 const defaultEnv = astroCommand === 'dev' ? 'local' : 'production';
 const appEnv = resolveAppEnv(commandArgs, { defaultEnv });
 const env = loadAppEnv(rootDir, appEnv);
+const publicSiteUrl = requirePublicSiteUrl(env, 'Missing required frontend site URL env');
 
 requireEnvText(env, 'PUBLIC_API_URL', 'Missing required frontend env');
 requireEnvText(env, 'PUBLIC_TURNSTILE_SITE_KEY', 'Missing required frontend env');
@@ -23,6 +26,7 @@ const commandName = (base) => (process.platform === 'win32' ? `${base}.cmd` : ba
 const childEnv = {
   ...process.env,
   ...env,
+  PUBLIC_SITE_URL: publicSiteUrl,
   SHORTYOU_ENV: appEnv
 };
 
@@ -34,4 +38,8 @@ const result = spawnSync(commandName('astro'), [astroCommand, ...astroArgs], {
 
 if (result.status !== 0) {
   throw new Error(`Frontend command failed: astro ${astroCommand}`);
+}
+
+if (astroCommand === 'build') {
+  await writeFrontendSiteArtifacts(path.join(rootDir, 'dist'), publicSiteUrl);
 }

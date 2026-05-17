@@ -8,6 +8,7 @@
     "build:gas": "tsc --project tsconfig.gas.json && node scripts/build-gas.mjs",
     "typecheck:gas": "tsc --noEmit --project tsconfig.gas.json",
     "check:gas": "node --check gas/Code.js && test -f gas/appsscript.json",
+    "check:production-health": "node scripts/check-production-health.mjs",
     "gas:push": "node scripts/push-gas.mjs",
     "gas:push:local": "node scripts/push-gas.mjs --env local",
     "gas:push:production": "node scripts/push-gas.mjs --env production",

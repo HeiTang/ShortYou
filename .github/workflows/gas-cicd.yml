@@ -53,6 +53,15 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate
     environment: production
+    env:
+      PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
+      GAS_PUBLIC_SITE_URL: ${{ vars.GAS_PUBLIC_SITE_URL }}
+      GAS_ENFORCE_CAPTCHA: ${{ vars.GAS_ENFORCE_CAPTCHA || 'true' }}
+      GAS_ENFORCE_ACCESS_CONTROL: ${{ vars.GAS_ENFORCE_ACCESS_CONTROL || 'true' }}
+      GAS_DEPLOYMENT_DESCRIPTION: ${{ vars.GAS_DEPLOYMENT_DESCRIPTION || 'shortyou-prod' }}
+      GAS_SCRIPT_ID: ${{ secrets.GAS_SCRIPT_ID }}
+      GAS_DEPLOYMENT_ID: ${{ secrets.GAS_DEPLOYMENT_ID }}
+      GAS_TURNSTILE_SECRET: ${{ secrets.GAS_TURNSTILE_SECRET }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -65,38 +74,40 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build GAS backend (TypeScript -> JavaScript)
-        run: npm run build
-
       - name: Install clasp
         run: npm i -g @google/clasp
 
       - name: Prepare clasp auth
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
-          GAS_SCRIPT_ID: ${{ secrets.GAS_SCRIPT_ID }}
         run: |
-          if [ -z "$CLASPRC_JSON" ] || [ -z "$GAS_SCRIPT_ID" ]; then
-            echo "Missing required secrets: CLASPRC_JSON / GAS_SCRIPT_ID"
+          if [ -z "$CLASPRC_JSON" ]; then
+            echo "Missing required secret: CLASPRC_JSON"
             exit 1
           fi
           printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
-          cat > gas/.clasp.json <<EOF
-          {
-            "scriptId": "$GAS_SCRIPT_ID",
-            "rootDir": "./"
-          }
-          EOF
 
-      - name: Push and deploy GAS
-        env:
-          GAS_DEPLOYMENT_ID: ${{ secrets.GAS_DEPLOYMENT_ID }}
+      - name: Validate production deploy inputs
         run: |
-          cd gas
-          clasp push --force
-          clasp version "ci-${GITHUB_SHA}"
-          if [ -n "$GAS_DEPLOYMENT_ID" ]; then
-            clasp deploy -i "$GAS_DEPLOYMENT_ID" -d "ci-${GITHUB_SHA}"
-          else
-            clasp deploy -d "ci-${GITHUB_SHA}"
+          missing=0
+          for name in \
+            PUBLIC_API_URL \
+            GAS_PUBLIC_SITE_URL \
+            GAS_ENFORCE_CAPTCHA \
+            GAS_ENFORCE_ACCESS_CONTROL \
+            GAS_SCRIPT_ID \
+            GAS_DEPLOYMENT_ID \
+            GAS_TURNSTILE_SECRET
+          do
+            if [ -z "${!name}" ]; then
+              echo "Missing required deploy input: $name"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
           fi
+
+      - name: Push, deploy, and sync runtime config
+        run: |
+          node scripts/push-gas.mjs --env production --deploy

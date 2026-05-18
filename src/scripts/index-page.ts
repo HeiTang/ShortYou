@@ -136,12 +136,12 @@ export function initIndexPage(config: IndexPageConfig): void {
     const valid = inputUrl.value.trim().startsWith('http');
     aliasController.syncSubmitButton(submitButton, valid);
     if (isAuthorizedMode()) {
-      submitButton.textContent = 'Create';
+      submitButton.textContent = 'Short it !';
       submitButton.disabled = !(valid && turnstileVerified);
       return;
     }
 
-    submitButton.textContent = 'Shorten';
+    submitButton.textContent = 'Short it !';
     submitButton.disabled = !valid;
   };
 

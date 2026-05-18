@@ -114,6 +114,45 @@ body {
   @apply border-rose-500 focus:border-rose-400 focus:ring-rose-400/40;
 }
 
+.result-card {
+  @apply mt-4 rounded-2xl border border-white/10 p-4;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow:
+    0 0 0 0.5px rgba(255, 255, 255, 0.08) inset,
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.result-link-row {
+  @apply flex items-center gap-2;
+}
+
+.result-link {
+  @apply flex-1 break-all text-sm font-medium text-cyan-300 underline decoration-cyan-300/30 underline-offset-2 transition-colors hover:text-cyan-200 hover:decoration-cyan-200/50;
+}
+
+.result-actions {
+  @apply flex shrink-0 items-center gap-1;
+}
+
+.icon-btn-sm {
+  @apply inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/10 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20;
+}
+
+.qr-container {
+  @apply mt-3 hidden justify-center rounded-xl p-4;
+}
+
+.qr-container.is-open {
+  @apply flex;
+}
+
+.qr-container canvas {
+  @apply block rounded-lg;
+}
+
 .toast {
   @apply pointer-events-none fixed right-4 top-4 z-50 max-w-xs rounded-md border px-3 py-2 text-sm opacity-0 shadow-lg transition;
 }

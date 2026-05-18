@@ -1,3 +1,4 @@
+import QRCode from 'qrcode';
 import { createAliasUIController } from './alias-ui';
 import { humanizeBackendError } from './backend-messages';
 import { fetchIPFromCloudflare, getById, initTxtRotate, postForm, readDecodedHash, setCurrentYear } from './common';
@@ -42,7 +43,12 @@ export function initIndexPage(config: IndexPageConfig): void {
   const submitButton = getById<HTMLButtonElement>('btn');
   const turnstileWrap = getById<HTMLElement>('turnstileWidget');
   const modeHint = getById<HTMLElement>('modeHint');
-  const resultNode = getById<HTMLElement>('result');
+  const resultCard = getById<HTMLElement>('resultCard');
+  const resultLink = getById<HTMLAnchorElement>('resultLink');
+  const copyBtn = getById<HTMLButtonElement>('copyBtn');
+  const qrBtn = getById<HTMLButtonElement>('qrBtn');
+  const qrContainer = getById<HTMLElement>('qrContainer');
+  const qrCanvas = getById<HTMLCanvasElement>('qrCanvas');
   const toast = getById<HTMLElement>('toast');
 
   if (
@@ -55,7 +61,12 @@ export function initIndexPage(config: IndexPageConfig): void {
     !submitButton ||
     !turnstileWrap ||
     !modeHint ||
-    !resultNode ||
+    !resultCard ||
+    !resultLink ||
+    !copyBtn ||
+    !qrBtn ||
+    !qrContainer ||
+    !qrCanvas ||
     !toast
   ) {
     return;
@@ -68,6 +79,16 @@ export function initIndexPage(config: IndexPageConfig): void {
   let toastTimer = 0;
   let turnstileScriptLoaded = false;
   let turnstileWidgetId = '';
+
+  let currentShortUrl = '';
+
+  const showResult = (url: string): void => {
+    currentShortUrl = url;
+    resultLink.href = url;
+    resultLink.textContent = url;
+    resultCard.classList.remove('hidden');
+    qrContainer.classList.remove('is-open');
+  };
 
   const aliasController = createAliasUIController({
     inputAlias,
@@ -259,7 +280,7 @@ export function initIndexPage(config: IndexPageConfig): void {
           return;
         }
 
-        resultNode.innerText = `${pageBase}#${data.result}`;
+        showResult(`${pageBase}#${data.result}`);
         showToast('Create success.', 'success');
         return;
       } catch {
@@ -271,8 +292,36 @@ export function initIndexPage(config: IndexPageConfig): void {
     }
 
     const alias = previewAlias();
-    resultNode.innerText = `${pageBase}#${alias}`;
+    showResult(`${pageBase}#${alias}`);
     showToast('Preview only. Fixed mock result returned without calling create API.', 'success');
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    if (!currentShortUrl) return;
+    try {
+      await navigator.clipboard.writeText(currentShortUrl);
+      showToast('Copied!', 'success');
+    } catch {
+      showToast('複製失敗', 'error');
+    }
+  });
+
+  qrBtn.addEventListener('click', async () => {
+    if (!currentShortUrl) return;
+    if (qrContainer.classList.contains('is-open')) {
+      qrContainer.classList.remove('is-open');
+      return;
+    }
+    try {
+      await QRCode.toCanvas(qrCanvas, currentShortUrl, {
+        width: 200,
+        margin: 2,
+        color: { dark: '#e2e8f0', light: '#00000000' }
+      });
+      qrContainer.classList.add('is-open');
+    } catch {
+      showToast('QR Code 生成失敗', 'error');
+    }
   });
 
   updateModeHint();

@@ -68,7 +68,36 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       <p id="modeHint" class="text-xs text-slate-400">Playground only: this page returns a mock result and does not call the create API.</p>
       <div id="turnstileWidget" class="hidden"></div>
-      <p id="result" class="mt-3 break-all text-sm text-cyan-300"></p>
+
+      <div id="resultCard" class="result-card hidden">
+        <div class="result-link-row">
+          <a id="resultLink" class="result-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+          <div class="result-actions">
+            <button id="copyBtn" type="button" class="icon-btn-sm" aria-label="Copy short link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+            <button id="qrBtn" type="button" class="icon-btn-sm" aria-label="Show QR Code">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+                <rect x="2" y="2" width="8" height="8" rx="1"></rect>
+                <rect x="14" y="2" width="8" height="8" rx="1"></rect>
+                <rect x="2" y="14" width="8" height="8" rx="1"></rect>
+                <path d="M14 14h2v2h-2z"></path>
+                <path d="M20 14h2v2h-2z"></path>
+                <path d="M14 20h2v2h-2z"></path>
+                <path d="M20 20h2v2h-2z"></path>
+                <path d="M18 17h2v2h-2z"></path>
+                <path d="M17 18v2"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="qrContainer" class="qr-container">
+          <canvas id="qrCanvas"></canvas>
+        </div>
+      </div>
     </div>
   </section>
 

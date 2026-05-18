@@ -29,6 +29,18 @@ const {
     {canonical && <link rel="canonical" href={canonical} />}
     <link rel="icon" href="/favicon.ico" />
     <slot name="head" />
+    <script is:inline>
+      // Earliest possible redirect detection — runs before body renders.
+      (function () {
+        var h = decodeURIComponent((location.hash || '').replace(/^#/, ''));
+        if (h && !h.startsWith('t=')) {
+          document.documentElement.classList.add('is-redirecting');
+        }
+      })();
+    </script>
+    <style is:inline>
+      html.is-redirecting main { display: none !important; }
+    </style>
   </head>
   <body class="min-h-screen bg-zinc-900 text-slate-100">
     <main class="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-5">

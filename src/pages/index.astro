@@ -7,10 +7,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   description="ShortYou is a URL Shortener."
   robots="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1"
 >
-  <section id="redirectPanel" class="mb-4 hidden border border-slate-600 bg-slate-800 px-4 py-3 text-sm text-slate-200">
-    Redirecting...
-  </section>
-
   <section class="mx-auto my-8 w-full max-w-xl text-center">
     <h1 class="title-font mb-12 text-6xl leading-none md:text-8xl">
       Just&nbsp;Shorten&nbsp;It
@@ -100,6 +96,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
     </div>
   </section>
+
+  <div id="redirectOverlay" class="redirect-overlay" slot="afterMain">
+    <canvas id="matrixCanvas" class="matrix-canvas"></canvas>
+    <div class="redirect-content">
+      <p id="redirectLabel" class="redirect-label">resolving</p>
+      <p id="redirectAlias" class="redirect-alias" data-text="">#</p>
+      <div class="redirect-bar"><div id="redirectBar" class="redirect-bar-fill"></div></div>
+      <p id="redirectDest" class="redirect-dest"></p>
+    </div>
+    <div class="redirect-scanlines"></div>
+  </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite" slot="afterMain"></div>
 

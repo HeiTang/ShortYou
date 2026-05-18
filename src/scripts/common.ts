@@ -76,6 +76,117 @@ class TxtRotate {
   }
 }
 
+const SCRAMBLE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*!?';
+
+export function scrambleText(
+  el: HTMLElement,
+  target: string,
+  opts: { duration?: number; onDone?: () => void } = {}
+): void {
+  const duration = opts.duration ?? 1200;
+  const len = target.length;
+  const perChar = duration / len;
+  let resolved = 0;
+  let frame = 0;
+  let prevResolved = 0;
+
+  const randChar = (): string => SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+
+  const render = (justLocked: number): void => {
+    el.innerHTML = '';
+    const dataChars: string[] = [];
+    for (let i = 0; i < len; i++) {
+      const span = document.createElement('span');
+      if (i < resolved) {
+        span.textContent = target[i];
+        dataChars.push(target[i]);
+        if (i === justLocked) span.className = 'char-lock';
+      } else {
+        const c = randChar();
+        span.textContent = c;
+        span.className = 'char-rand';
+        dataChars.push(c);
+      }
+      el.appendChild(span);
+    }
+    el.setAttribute('data-text', dataChars.join(''));
+  };
+
+  const tick = (): void => {
+    frame++;
+    const elapsed = frame * 30;
+    const nextResolved = Math.min(Math.floor(elapsed / perChar), len);
+    const locked = nextResolved > prevResolved ? nextResolved - 1 : -1;
+    if (nextResolved > resolved) resolved = nextResolved;
+    prevResolved = nextResolved;
+    render(locked);
+    if (resolved < len) {
+      requestAnimationFrame(tick);
+    } else {
+      el.textContent = target;
+      el.setAttribute('data-text', target);
+      opts.onDone?.();
+    }
+  };
+
+  requestAnimationFrame(tick);
+}
+
+export function initMatrixRain(canvas: HTMLCanvasElement): () => void {
+  const ctx = canvas.getContext('2d')!;
+  let animId = 0;
+  const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF';
+  const fontSize = 14;
+  let columns = 0;
+  let drops: number[] = [];
+
+  const resize = (): void => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    columns = Math.floor(canvas.width / fontSize);
+    drops = Array.from({ length: columns }, () => Math.random() * -100);
+  };
+
+  const draw = (): void => {
+    ctx.fillStyle = 'rgba(10, 10, 12, 0.12)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = `${fontSize}px monospace`;
+
+    for (let i = 0; i < columns; i++) {
+      const char = chars[Math.floor(Math.random() * chars.length)];
+      const x = i * fontSize;
+      const y = drops[i] * fontSize;
+
+      const brightness = Math.random();
+      if (brightness > 0.95) {
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.9)';
+      } else if (brightness > 0.8) {
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+      } else {
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.12)';
+      }
+
+      ctx.fillText(char, x, y);
+
+      if (y > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i] += 0.6 + Math.random() * 0.4;
+    }
+
+    animId = requestAnimationFrame(draw);
+  };
+
+  resize();
+  window.addEventListener('resize', resize);
+  draw();
+
+  return () => {
+    cancelAnimationFrame(animId);
+    window.removeEventListener('resize', resize);
+  };
+}
+
 export function initTxtRotate(className = 'txt-rotate'): void {
   const elements = document.getElementsByClassName(className);
   for (let i = 0; i < elements.length; i += 1) {

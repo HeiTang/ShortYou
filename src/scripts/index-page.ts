@@ -1,7 +1,7 @@
 import QRCode from 'qrcode';
 import { createAliasUIController } from './alias-ui';
 import { humanizeBackendError } from './backend-messages';
-import { fetchIPFromCloudflare, getById, initTxtRotate, postForm, readDecodedHash, setCurrentYear } from './common';
+import { fetchIPFromCloudflare, getById, initMatrixRain, initTxtRotate, postForm, readDecodedHash, scrambleText, setCurrentYear } from './common';
 
 type IndexPageConfig = {
   api: string;
@@ -34,7 +34,11 @@ export function initIndexPage(config: IndexPageConfig): void {
 
   setCurrentYear();
 
-  const redirectPanel = getById<HTMLElement>('redirectPanel');
+  const redirectOverlay = getById<HTMLElement>('redirectOverlay');
+  const redirectLabel = getById<HTMLElement>('redirectLabel');
+  const redirectAlias = getById<HTMLElement>('redirectAlias');
+  const redirectDest = getById<HTMLElement>('redirectDest');
+  const redirectBar = getById<HTMLElement>('redirectBar');
   const inputUrl = getById<HTMLInputElement>('url');
   const inputAlias = getById<HTMLInputElement>('alias');
   const aliasToggle = getById<HTMLButtonElement>('aliasToggle');
@@ -52,7 +56,7 @@ export function initIndexPage(config: IndexPageConfig): void {
   const toast = getById<HTMLElement>('toast');
 
   if (
-    !redirectPanel ||
+    !redirectOverlay ||
     !inputUrl ||
     !inputAlias ||
     !aliasToggle ||
@@ -231,15 +235,56 @@ export function initIndexPage(config: IndexPageConfig): void {
   }
 
   if (hash && !hash.startsWith('t=')) {
-    redirectPanel.classList.remove('hidden');
-    fetch(`${api}?query=${encodeURIComponent(hash)}`)
-      .then((response) => response.json() as Promise<ResolveResponse>)
-      .then((json) => {
-        window.location.href = json && json.success && json.result ? json.result : pageBase;
-      })
-      .catch(() => {
-        window.location.href = pageBase;
-      });
+    document.documentElement.classList.add('is-redirecting');
+
+    const matrixCanvas = getById<HTMLCanvasElement>('matrixCanvas');
+    if (matrixCanvas) initMatrixRain(matrixCanvas);
+
+    const aliasDisplay = `#${hash}`;
+    if (redirectAlias) {
+      scrambleText(redirectAlias, aliasDisplay, { duration: 1000 });
+    }
+
+    const launchTo = (url: string): void => {
+      redirectOverlay.classList.add('launch');
+      setTimeout(() => { window.location.href = url; }, 500);
+    };
+
+    const showDest = (dest: string): void => {
+      if (redirectLabel) redirectLabel.textContent = 'destination';
+      if (redirectBar) redirectBar.classList.add('redirect-bar-done');
+      if (redirectDest) {
+        scrambleText(redirectDest, dest, {
+          duration: 600,
+          onDone: () => { setTimeout(() => launchTo(dest), 400); }
+        });
+      } else {
+        launchTo(dest);
+      }
+    };
+
+    const showError = (msg: string): void => {
+      if (redirectLabel) redirectLabel.textContent = 'error';
+      if (redirectDest) scrambleText(redirectDest, msg, { duration: 300 });
+      setTimeout(() => { window.location.href = pageBase; }, 1500);
+    };
+
+    if (hash === 'demo-preview') {
+      showDest('https://github.com/HeiTang/ShortYou');
+    } else {
+      fetch(`${api}?query=${encodeURIComponent(hash)}`)
+        .then((response) => response.json() as Promise<ResolveResponse>)
+        .then((json) => {
+          if (json && json.success && json.result) {
+            showDest(json.result);
+          } else {
+            showError('link not found');
+          }
+        })
+        .catch(() => {
+          showError('something went wrong');
+        });
+    }
     return;
   }
 

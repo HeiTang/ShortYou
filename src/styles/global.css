@@ -12,6 +12,174 @@ body {
   @apply bg-zinc-900 text-slate-100;
 }
 
+/* ── Redirect overlay ── */
+.redirect-overlay {
+  @apply pointer-events-none fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden opacity-0;
+  background: #0a0a0c;
+  transition: opacity 0.3s ease;
+}
+
+html.is-redirecting .redirect-overlay {
+  @apply pointer-events-auto opacity-100;
+}
+
+.matrix-canvas {
+  @apply absolute inset-0 z-0;
+}
+
+.redirect-content {
+  @apply relative z-10 text-center;
+}
+
+.redirect-label {
+  @apply mb-2 text-xs uppercase tracking-[0.3em] text-slate-600;
+  font-family: 'Changa', sans-serif;
+}
+
+.redirect-alias {
+  @apply relative inline-block text-3xl font-bold text-slate-100 md:text-5xl;
+  font-family: 'Changa', sans-serif;
+  animation: glitch 3s infinite;
+}
+
+.redirect-alias::before,
+.redirect-alias::after {
+  content: attr(data-text);
+  @apply pointer-events-none absolute left-0 top-0 h-full w-full;
+}
+
+.redirect-alias::before {
+  color: rgba(56, 189, 248, 0.7);
+  animation: glitchLeft 3s infinite;
+  clip-path: inset(0 0 60% 0);
+}
+
+.redirect-alias::after {
+  color: rgba(236, 72, 153, 0.7);
+  animation: glitchRight 3s infinite;
+  clip-path: inset(40% 0 0 0);
+}
+
+@keyframes glitch {
+  0%, 85%, 100% { transform: none; }
+  86% { transform: skewX(-3deg) scaleY(1.02); }
+  88% { transform: skewX(2deg) translateX(3px); }
+  90% { transform: skewX(-1deg) translateX(-2px) scaleX(1.01); }
+  92% { transform: translateX(1px); }
+  94% { transform: skewX(1deg) translateX(-1px); }
+  96% { transform: none; }
+  97% { transform: translateX(2px) skewX(-2deg); }
+}
+
+@keyframes glitchLeft {
+  0%, 84%, 100% { transform: none; opacity: 0; }
+  85% { transform: translateX(-6px); opacity: 0.8; }
+  87% { transform: translateX(3px); opacity: 0.6; }
+  89% { transform: translateX(-2px); opacity: 0.7; }
+  91% { transform: translateX(5px); opacity: 0.5; }
+  93% { transform: translateX(-3px); opacity: 0.8; }
+  95% { transform: none; opacity: 0; }
+}
+
+@keyframes glitchRight {
+  0%, 86%, 100% { transform: none; opacity: 0; }
+  87% { transform: translateX(5px); opacity: 0.7; }
+  89% { transform: translateX(-3px); opacity: 0.6; }
+  91% { transform: translateX(6px); opacity: 0.8; }
+  93% { transform: translateX(-2px); opacity: 0.5; }
+  95% { transform: translateX(3px); opacity: 0.7; }
+  97% { transform: none; opacity: 0; }
+}
+
+.redirect-bar {
+  @apply mx-auto mt-6 h-[2px] w-48 overflow-hidden rounded-full bg-slate-800;
+}
+
+.redirect-bar-fill {
+  @apply h-full rounded-full;
+  width: 0%;
+  background: linear-gradient(90deg, #38bdf8, #a855f7, #ec4899);
+  animation: barFill 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes barFill {
+  0%   { width: 0%;   opacity: 0.6; }
+  60%  { width: 80%;  opacity: 1; }
+  80%  { width: 90%;  opacity: 1; }
+  100% { width: 100%; opacity: 0; }
+}
+
+.redirect-dest {
+  @apply mt-4 min-h-[1.25rem] text-xs text-slate-500;
+  font-family: 'Changa', sans-serif;
+  max-width: 480px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.redirect-bar-done {
+  width: 100% !important;
+  animation: none !important;
+  opacity: 1;
+  transition: width 0.3s ease;
+}
+
+/* Character flash when locking in */
+.char-lock {
+  color: #38bdf8;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.8), 0 0 30px rgba(56, 189, 248, 0.3);
+  animation: charFlash 0.4s ease-out forwards;
+}
+
+.char-rand {
+  @apply text-slate-500;
+}
+
+@keyframes charFlash {
+  0%   { color: #38bdf8; text-shadow: 0 0 16px rgba(56, 189, 248, 0.9), 0 0 40px rgba(56, 189, 248, 0.4); }
+  100% { color: #f1f5f9; text-shadow: none; }
+}
+
+/* Launch zoom effect before redirect */
+.redirect-overlay.launch {
+  animation: launchZoom 0.5s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes launchZoom {
+  0%   { transform: scale(1); filter: brightness(1); }
+  50%  { filter: brightness(2); }
+  100% { transform: scale(3); filter: brightness(3); opacity: 0; }
+}
+
+/* CRT scan lines + vignette */
+.redirect-scanlines {
+  @apply pointer-events-none absolute inset-0 z-20;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 2px,
+      rgba(0, 0, 0, 0.12) 2px,
+      rgba(0, 0, 0, 0.12) 4px
+    ),
+    radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+/* Screen flicker */
+.redirect-overlay::before {
+  content: '';
+  @apply pointer-events-none absolute inset-0 z-30;
+  animation: flicker 0.15s infinite;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+@keyframes flicker {
+  0%   { opacity: 0.02; }
+  50%  { opacity: 0; }
+  100% { opacity: 0.015; }
+}
+
 .txt-rotate {
   border-right: 0.08em solid #666;
   padding-right: 2px;

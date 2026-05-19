@@ -12,7 +12,8 @@ const orderedFiles = [
   'repository.js',
   'services.js',
   'controller.js',
-  'entrypoints.js'
+  'entrypoints.js',
+  'admin-ui.js'
 ];
 
 async function readChunk(fileName) {

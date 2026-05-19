@@ -172,10 +172,11 @@ function issueCapabilityLink(
   ownerName: string,
   expiresAtIso: string,
   dailyQuota: number,
-  note: string
+  note: string,
+  email: string
 ): ApiResult {
   const { repository } = buildRuntimeContext_();
-  const result = repository.withScriptLock(() => repository.issueCapabilityLink(ownerName, expiresAtIso, dailyQuota, note));
+  const result = repository.withScriptLock(() => repository.issueCapabilityLink(ownerName, expiresAtIso, dailyQuota, note, email));
 
   // Apps Script 編輯器手動執行時，回傳值不一定會直接顯示；同步寫入執行記錄方便複製完整 link。
   Logger.log(JSON.stringify(result));
@@ -268,10 +269,11 @@ function upsertClient(
   capabilityToken: string,
   expiresAtIso: string,
   dailyQuota: number,
-  note: string
+  note: string,
+  email: string
 ): ApiResult {
   const { repository } = buildRuntimeContext_();
-  return repository.withScriptLock(() => repository.upsertClient(clientCode, ownerName, capabilityToken, expiresAtIso, dailyQuota, note));
+  return repository.withScriptLock(() => repository.upsertClient(clientCode, ownerName, capabilityToken, expiresAtIso, dailyQuota, note, email));
 }
 
 function json_(obj: JsonObject | ApiResult): GoogleAppsScript.Content.TextOutput {

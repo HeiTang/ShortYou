@@ -326,7 +326,7 @@ function issueDialogHtml_(): string {
       'if(!r){onFail({message:"No response"});return}' +
       'if(!r.success){setLoading(false);showErr(r.error||"Unknown error");return}' +
       'if(r.error&&!r.emailSent){' +
-        'setLoading(false);showErr("Client "+(r.clientCode||"")+" created, but: "+r.error);return}' +
+        'setLoading(false);showWarn("Client "+(r.clientCode||"")+" created, but: "+r.error,r.result);return}' +
       'var m="Client issued: "+(r.clientCode||"")+" — email sent!";' +
       'showOk(m);' +
       'setTimeout(function(){google.script.host.close()},2000);' +
@@ -336,11 +336,24 @@ function issueDialogHtml_(): string {
 
     'function setLoading(on){' +
       'var b=document.getElementById("submitBtn");' +
-      'b.disabled=on;b.textContent=on?"Issuing...":"Issue";' +
+      'b.disabled=on;b.textContent=on?"Creating...":"Create";' +
     '}' +
 
     'function showErr(m){hideMsg();var e=document.getElementById("errMsg");e.textContent=m;e.style.display="block"}' +
     'function showOk(m){hideMsg();var e=document.getElementById("okMsg");e.textContent=m;e.style.display="block"}' +
+    'function showWarn(m,link){' +
+      'hideMsg();var e=document.getElementById("errMsg");' +
+      'e.innerHTML="";' +
+      'var t=document.createTextNode(m);e.appendChild(t);' +
+      'if(link){' +
+        'var br=document.createElement("br");e.appendChild(br);' +
+        'var code=document.createElement("code");code.textContent=link;code.style.cssText="display:block;margin-top:6px;word-break:break-all;font-size:12px";e.appendChild(code);' +
+        'var btn=document.createElement("button");btn.textContent="Copy Link";btn.className="btn btn-text";btn.style.cssText="margin-top:8px;font-size:12px;padding:4px 12px";' +
+        'btn.addEventListener("click",function(){try{var ta=document.createElement("textarea");ta.value=link;document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);btn.textContent="Copied!"}catch(ex){}});' +
+        'e.appendChild(btn);' +
+      '}' +
+      'e.style.display="block";' +
+    '}' +
     'function hideMsg(){' +
       'document.getElementById("errMsg").style.display="none";' +
       'document.getElementById("okMsg").style.display="none";' +
@@ -551,6 +564,8 @@ function clientPickerDialogHtml_(action: string, title: string, btnLabel: string
     'var clients=' + safeJsonEmbed_(clients) + ';' +
     'var action="' + action + '";' +
 
+    'function esc(s){var d=document.createElement("div");d.appendChild(document.createTextNode(s));return d.innerHTML}' +
+
     'document.getElementById("cancelBtn").addEventListener("click",function(){google.script.host.close()});' +
     'document.getElementById("submitBtn").addEventListener("click",onSubmit);' +
     'document.getElementById("clientSelect").addEventListener("change",showInfo);' +
@@ -562,10 +577,10 @@ function clientPickerDialogHtml_(action: string, title: string, btnLabel: string
       'var el=document.getElementById("clientInfo");' +
       'if(!c){el.style.display="none";return}' +
       'el.innerHTML=' +
-        '"<div><span class=\\"label\\">Owner</span><br>"+c.owner+"</div>"+' +
-        '"<div style=\\"margin-top:6px\\"><span class=\\"label\\">Code</span><br>"+c.code+"</div>"+' +
-        '(c.hint?"<div style=\\"margin-top:6px\\"><span class=\\"label\\">Token Hint</span><br>"+c.hint+"</div>":"")+' +
-        '(c.email?"<div style=\\"margin-top:6px\\"><span class=\\"label\\">Email</span><br>"+c.email+"</div>":"");' +
+        '"<div><span class=\\"label\\">Owner</span><br>"+esc(c.owner)+"</div>"+' +
+        '"<div style=\\"margin-top:6px\\"><span class=\\"label\\">Code</span><br>"+esc(c.code)+"</div>"+' +
+        '(c.hint?"<div style=\\"margin-top:6px\\"><span class=\\"label\\">Token Hint</span><br>"+esc(c.hint)+"</div>":"")+' +
+        '(c.email?"<div style=\\"margin-top:6px\\"><span class=\\"label\\">Email</span><br>"+esc(c.email)+"</div>":"");' +
       'el.style.display="block";' +
     '}' +
 
@@ -669,6 +684,8 @@ function rotateDialogHtml_(): string {
     '<script>' +
     'var clients=' + safeJsonEmbed_(clients) + ';' +
 
+    'function esc(s){var d=document.createElement("div");d.appendChild(document.createTextNode(s));return d.innerHTML}' +
+
     'document.getElementById("cancelBtn").addEventListener("click",function(){google.script.host.close()});' +
     'document.getElementById("submitBtn").addEventListener("click",onSubmit);' +
     'document.getElementById("clientSelect").addEventListener("change",showInfo);' +
@@ -680,10 +697,10 @@ function rotateDialogHtml_(): string {
       'var el=document.getElementById("clientInfo");' +
       'if(!c){el.style.display="none";return}' +
       'el.innerHTML=' +
-        '"<div><span class=\\"label\\">Owner</span><br>"+c.owner+"</div>"+' +
-        '"<div style=\\"margin-top:6px\\"><span class=\\"label\\">Code</span><br>"+c.code+"</div>"+' +
-        '(c.hint?"<div style=\\"margin-top:6px\\"><span class=\\"label\\">Token Hint</span><br>"+c.hint+"</div>":"")+' +
-        '(c.email?"<div style=\\"margin-top:6px\\"><span class=\\"label\\">Email</span><br>"+c.email+"</div>":"<div style=\\"margin-top:6px;color:var(--md-error)\\"><span class=\\"label\\">⚠ Email</span><br>Not set — rotation will be blocked</div>");' +
+        '"<div><span class=\\"label\\">Owner</span><br>"+esc(c.owner)+"</div>"+' +
+        '"<div style=\\"margin-top:6px\\"><span class=\\"label\\">Code</span><br>"+esc(c.code)+"</div>"+' +
+        '(c.hint?"<div style=\\"margin-top:6px\\"><span class=\\"label\\">Token Hint</span><br>"+esc(c.hint)+"</div>":"")+' +
+        '(c.email?"<div style=\\"margin-top:6px\\"><span class=\\"label\\">Email</span><br>"+esc(c.email)+"</div>":"<div style=\\"margin-top:6px;color:var(--md-error)\\"><span class=\\"label\\">⚠ Email</span><br>Not set — rotation will be blocked</div>");' +
       'el.style.display="block";' +
     '}' +
 
@@ -701,7 +718,7 @@ function rotateDialogHtml_(): string {
       'if(!r){onFail({message:"No response"});return}' +
       'if(!r.success){setLoading(false);showErr(r.error||"Unknown error");return}' +
       'if(r.error&&!r.emailSent){' +
-        'setLoading(false);showErr(r.error);return}' +
+        'setLoading(false);showWarn(r.error,r.result);return}' +
       'showOk("Token rotated! New link sent via email.");' +
       'setTimeout(function(){google.script.host.close()},2000);' +
     '}' +
@@ -715,6 +732,19 @@ function rotateDialogHtml_(): string {
 
     'function showErr(m){hideMsg();var e=document.getElementById("errMsg");e.textContent=m;e.style.display="block"}' +
     'function showOk(m){hideMsg();var e=document.getElementById("okMsg");e.textContent=m;e.style.display="block"}' +
+    'function showWarn(m,link){' +
+      'hideMsg();var e=document.getElementById("errMsg");' +
+      'e.innerHTML="";' +
+      'var t=document.createTextNode(m);e.appendChild(t);' +
+      'if(link){' +
+        'var br=document.createElement("br");e.appendChild(br);' +
+        'var code=document.createElement("code");code.textContent=link;code.style.cssText="display:block;margin-top:6px;word-break:break-all;font-size:12px";e.appendChild(code);' +
+        'var btn=document.createElement("button");btn.textContent="Copy Link";btn.className="btn btn-text";btn.style.cssText="margin-top:8px;font-size:12px;padding:4px 12px";' +
+        'btn.addEventListener("click",function(){try{var ta=document.createElement("textarea");ta.value=link;document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);btn.textContent="Copied!"}catch(ex){}});' +
+        'e.appendChild(btn);' +
+      '}' +
+      'e.style.display="block";' +
+    '}' +
     'function hideMsg(){document.getElementById("errMsg").style.display="none";document.getElementById("okMsg").style.display="none"}' +
     '</script>';
 }

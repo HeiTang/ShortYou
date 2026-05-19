@@ -178,8 +178,8 @@ function issueCapabilityLink(
   const { repository } = buildRuntimeContext_();
   const result = repository.withScriptLock(() => repository.issueCapabilityLink(ownerName, expiresAtIso, dailyQuota, note, email));
 
-  // Apps Script 編輯器手動執行時，回傳值不一定會直接顯示；同步寫入執行記錄方便複製完整 link。
-  Logger.log(JSON.stringify(result));
+  // 僅記錄操作結果摘要，不記錄 token / link / email 等敏感資訊。
+  Logger.log(JSON.stringify({ success: result.success, clientCode: result.clientCode, error: result.error }));
   return result;
 }
 

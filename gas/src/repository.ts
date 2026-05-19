@@ -340,7 +340,9 @@ class SheetRepository {
       ]);
     } else {
       clientsSheet.getRange(row, SheetRepository.CLIENT_COL_OWNER).setValue(ownerName);
-      clientsSheet.getRange(row, SheetRepository.CLIENT_COL_EMAIL).setValue(email);
+      if (email) {
+        clientsSheet.getRange(row, SheetRepository.CLIENT_COL_EMAIL).setValue(email);
+      }
       clientsSheet.getRange(row, SheetRepository.CLIENT_COL_STATUS).setValue('active');
       clientsSheet.getRange(row, SheetRepository.CLIENT_COL_TOKEN_HASH).setValue(capabilityTokenHash);
       clientsSheet.getRange(row, SheetRepository.CLIENT_COL_TOKEN_HINT).setValue(tokenHint);

@@ -16,7 +16,7 @@ function escapeHtml_(text: string): string {
 
 function safeJsonEmbed_(obj: unknown): string {
   // JSON.stringify 不會 escape `<`，嵌入 <script> 區塊可能被 `</script>` 截斷。
-  return JSON.stringify(obj).replace(/</g, '\\u003c');
+  return JSON.stringify(obj).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
 }
 
 function css_(): string {
@@ -449,7 +449,7 @@ function issueClientFromDialog(
   ].join('\n');
 
   try {
-    GmailApp.sendEmail(email, subject, body);
+    MailApp.sendEmail(email, subject, body);
   } catch (e: any) {
     Logger.log(JSON.stringify({ clientCode: result.clientCode, emailFailed: true, reason: (e.message || e) }));
     return {
@@ -512,7 +512,7 @@ function getActiveClientsForPicker_(): { clients: ActiveClient[]; selectedCode: 
   return { clients, selectedCode };
 }
 
-function clientPickerDialogHtml_(action: string, title: string, btnLabel: string, btnColor: string): string {
+function clientPickerDialogHtml_(action: string, btnLabel: string, btnColor: string): string {
   const { clients, selectedCode } = getActiveClientsForPicker_();
 
   if (clients.length === 0) {
@@ -626,7 +626,7 @@ function clientPickerDialogHtml_(action: string, title: string, btnLabel: string
 
 function showDisableClientDialog(): void {
   const html = HtmlService.createHtmlOutput(
-    clientPickerDialogHtml_('disableClient', 'Disable Client', 'Disable', '#b3261e')
+    clientPickerDialogHtml_('disableClient', 'Disable', '#b3261e')
   )
     .setWidth(420)
     .setHeight(380);
@@ -814,7 +814,7 @@ function rotateClientTokenFromDialog(
   ].join('\n');
 
   try {
-    GmailApp.sendEmail(resultEmail, subject, body);
+    MailApp.sendEmail(resultEmail, subject, body);
   } catch (e: any) {
     Logger.log(JSON.stringify({ clientCode: normalizedCode, rotated: true, emailFailed: true, reason: (e.message || e) }));
     return {

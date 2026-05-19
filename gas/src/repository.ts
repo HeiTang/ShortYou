@@ -14,16 +14,17 @@ class SheetRepository {
 
   private static readonly CLIENT_COL_CODE = 1;
   private static readonly CLIENT_COL_OWNER = 2;
-  private static readonly CLIENT_COL_STATUS = 3;
-  private static readonly CLIENT_COL_TOKEN_HASH = 4;
-  private static readonly CLIENT_COL_TOKEN_HINT = 5;
-  private static readonly CLIENT_COL_ISSUED_AT = 6;
-  private static readonly CLIENT_COL_EXPIRES_AT = 7;
-  private static readonly CLIENT_COL_DAILY_QUOTA = 8;
-  private static readonly CLIENT_COL_DAILY_USED = 9;
-  private static readonly CLIENT_COL_QUOTA_RESET_AT = 10;
-  private static readonly CLIENT_COL_LAST_USED_AT = 11;
-  private static readonly CLIENT_COL_NOTE = 12;
+  private static readonly CLIENT_COL_EMAIL = 3;
+  private static readonly CLIENT_COL_STATUS = 4;
+  private static readonly CLIENT_COL_TOKEN_HASH = 5;
+  private static readonly CLIENT_COL_TOKEN_HINT = 6;
+  private static readonly CLIENT_COL_ISSUED_AT = 7;
+  private static readonly CLIENT_COL_EXPIRES_AT = 8;
+  private static readonly CLIENT_COL_DAILY_QUOTA = 9;
+  private static readonly CLIENT_COL_DAILY_USED = 10;
+  private static readonly CLIENT_COL_QUOTA_RESET_AT = 11;
+  private static readonly CLIENT_COL_LAST_USED_AT = 12;
+  private static readonly CLIENT_COL_NOTE = 13;
 
   constructor(private readonly config: AppConfig) {}
 
@@ -200,10 +201,20 @@ class SheetRepository {
     clientsSheet
       .getRange(row, SheetRepository.CLIENT_COL_QUOTA_RESET_AT)
       .setValue(DateUtil.nextUtcDayIso(DateUtil.now()));
+
+    const ownerName = InputNormalizer.text(
+      clientsSheet.getRange(row, SheetRepository.CLIENT_COL_OWNER).getValue()
+    );
+    const email = InputNormalizer.text(
+      clientsSheet.getRange(row, SheetRepository.CLIENT_COL_EMAIL).getValue()
+    );
+
     return {
       success: true,
       result: this.config.capabilityLink(capabilityToken),
-      capabilityToken
+      capabilityToken,
+      ownerName,
+      email
     };
   }
 
@@ -215,8 +226,14 @@ class SheetRepository {
     ownerNameInput: string,
     expiresAtIsoInput: string,
     dailyQuotaInput: number,
-    noteInput: string
+    noteInput: string,
+    emailInput: string
   ): ApiResult {
+    const emailNormalized = InputNormalizer.text(emailInput);
+    if (!emailNormalized || !emailNormalized.includes('@')) {
+      return { success: false, result: '', error: 'valid_email_required' };
+    }
+
     const capabilityToken = RandomUtil.randomToken(this.config.capabilityTokenLength);
     const capabilityTokenHash = DigestUtil.sha256Hex(capabilityToken);
     const clientCode = this.generateUniqueClientCode_();
@@ -243,6 +260,7 @@ class SheetRepository {
     clientsSheet.appendRow([
       clientCode,
       ownerName,
+      emailNormalized,
       'active',
       capabilityTokenHash,
       tokenHint,
@@ -274,7 +292,8 @@ class SheetRepository {
     capabilityTokenInput: string,
     expiresAtIsoInput: string,
     dailyQuotaInput: number,
-    noteInput: string
+    noteInput: string,
+    emailInput: string
   ): ApiResult {
     const clientCode = InputNormalizer.text(clientCodeInput);
     if (!clientCode) return { success: false, result: '', error: 'missing_client_code' };
@@ -299,6 +318,7 @@ class SheetRepository {
     const capabilityTokenHash = DigestUtil.sha256Hex(capabilityToken);
     const tokenHint = `${capabilityToken.slice(0, 6)}...`;
     const note = InputNormalizer.text(noteInput);
+    const email = InputNormalizer.text(emailInput);
 
     const clientsSheet = this.ensureClientsSheet_();
     const row = this.findClientRowByCode_(clientsSheet, clientCode);
@@ -306,6 +326,7 @@ class SheetRepository {
       clientsSheet.appendRow([
         clientCode,
         ownerName,
+        email,
         'active',
         capabilityTokenHash,
         tokenHint,
@@ -319,6 +340,9 @@ class SheetRepository {
       ]);
     } else {
       clientsSheet.getRange(row, SheetRepository.CLIENT_COL_OWNER).setValue(ownerName);
+      if (email) {
+        clientsSheet.getRange(row, SheetRepository.CLIENT_COL_EMAIL).setValue(email);
+      }
       clientsSheet.getRange(row, SheetRepository.CLIENT_COL_STATUS).setValue('active');
       clientsSheet.getRange(row, SheetRepository.CLIENT_COL_TOKEN_HASH).setValue(capabilityTokenHash);
       clientsSheet.getRange(row, SheetRepository.CLIENT_COL_TOKEN_HINT).setValue(tokenHint);
@@ -374,6 +398,7 @@ class SheetRepository {
     created.appendRow([
       'client_code',
       'owner_name',
+      'email',
       'status',
       'capability_token_hash',
       'token_hint',

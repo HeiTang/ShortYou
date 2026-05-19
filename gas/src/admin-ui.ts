@@ -5,6 +5,20 @@
 
 // ── HTML 片段工具 ──
 
+function escapeHtml_(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function safeJsonEmbed_(obj: unknown): string {
+  // JSON.stringify 不會 escape `<`，嵌入 <script> 區塊可能被 `</script>` 截斷。
+  return JSON.stringify(obj).replace(/</g, '\\u003c');
+}
+
 function css_(): string {
   return [
     ':root {',
@@ -311,8 +325,9 @@ function issueDialogHtml_(): string {
     'function onResult(r){' +
       'if(!r){onFail({message:"No response"});return}' +
       'if(!r.success){setLoading(false);showErr(r.error||"Unknown error");return}' +
-      'var m="Client issued: "+(r.clientCode||"");' +
-      'if(r.emailSent)m+=" — email sent!";' +
+      'if(r.error&&!r.emailSent){' +
+        'setLoading(false);showErr("Client "+(r.clientCode||"")+" created, but: "+r.error);return}' +
+      'var m="Client issued: "+(r.clientCode||"")+" — email sent!";' +
       'showOk(m);' +
       'setTimeout(function(){google.script.host.close()},2000);' +
     '}' +
@@ -370,33 +385,35 @@ function issueClientFromDialog(
   const email = InputNormalizer.text(ownerEmail);
   if (!email || !email.includes('@')) return { success: false, result: '', error: 'Valid email is required.' };
 
-  if (!force) {
-    const config = AppConfig.load();
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(config.clientsSheetName);
-    if (sheet) {
-      const lastRow = sheet.getLastRow();
-      if (lastRow >= 2) {
-        const data = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
-        for (let i = 0; i < data.length; i++) {
-          const rowOwner = InputNormalizer.text(data[i][1]);
-          const rowStatus = InputNormalizer.status(data[i][3]);
-          if (rowOwner === name && rowStatus === 'active') {
-            const existingCode = InputNormalizer.text(data[i][0]);
-            return {
-              success: false,
-              result: '',
-              error: `Owner "${name}" already has active client (${existingCode}). Check "Force" to create anyway, or use Rotate.`
-            };
+  const { repository } = buildRuntimeContext_();
+
+  // duplicate check + issue 在同一個 lock 內，避免併發建立重複 owner
+  const result = repository.withScriptLock(() => {
+    if (!force) {
+      const config = AppConfig.load();
+      const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(config.clientsSheetName);
+      if (sheet) {
+        const lastRow = sheet.getLastRow();
+        if (lastRow >= 2) {
+          const data = sheet.getRange(2, 1, lastRow - 1, 4).getValues();
+          for (let i = 0; i < data.length; i++) {
+            const rowOwner = InputNormalizer.text(data[i][1]);
+            const rowStatus = InputNormalizer.status(data[i][3]);
+            if (rowOwner === name && rowStatus === 'active') {
+              const existingCode = InputNormalizer.text(data[i][0]);
+              return {
+                success: false,
+                result: '',
+                error: 'Owner "' + name + '" already has active client (' + existingCode + '). Check "Force" to create anyway, or use Rotate.'
+              } as ApiResult;
+            }
           }
         }
       }
     }
-  }
 
-  const { repository } = buildRuntimeContext_();
-  const result = repository.withScriptLock(() =>
-    repository.issueCapabilityLink(name, expiresAtIso, dailyQuota, note, email)
-  );
+    return repository.issueCapabilityLink(name, expiresAtIso, dailyQuota, note, email);
+  });
 
   if (!result.success || !result.result) return result;
 
@@ -421,10 +438,17 @@ function issueClientFromDialog(
   try {
     GmailApp.sendEmail(email, subject, body);
   } catch (e: any) {
-    return { success: false, result: '', error: 'Email send failed: ' + (e.message || e) };
+    Logger.log(JSON.stringify({ clientCode: result.clientCode, emailFailed: true, reason: (e.message || e) }));
+    return {
+      success: true,
+      result: result.result,
+      clientCode: result.clientCode,
+      emailSent: false,
+      error: 'Client created but email failed: ' + (e.message || e) + '. Copy the link from the result field.'
+    };
   }
 
-  Logger.log(JSON.stringify({ ...result, emailSent: true }));
+  Logger.log(JSON.stringify({ clientCode: result.clientCode, emailSent: true }));
   return { ...result, emailSent: true };
 }
 
@@ -489,8 +513,8 @@ function clientPickerDialogHtml_(action: string, title: string, btnLabel: string
   let options = '';
   for (const c of clients) {
     const sel = c.code === selectedCode ? ' selected' : '';
-    const label = c.owner + ' (' + c.code + ')' + (c.hint ? ' — ' + c.hint : '');
-    options += '<option value="' + c.code + '"' + sel + '>' + label + '</option>';
+    const label = escapeHtml_(c.owner + ' (' + c.code + ')' + (c.hint ? ' — ' + c.hint : ''));
+    options += '<option value="' + escapeHtml_(c.code) + '"' + sel + '>' + label + '</option>';
   }
 
   return '<style>' + css_() +
@@ -524,7 +548,7 @@ function clientPickerDialogHtml_(action: string, title: string, btnLabel: string
     '</div>' +
 
     '<script>' +
-    'var clients=' + JSON.stringify(clients) + ';' +
+    'var clients=' + safeJsonEmbed_(clients) + ';' +
     'var action="' + action + '";' +
 
     'document.getElementById("cancelBtn").addEventListener("click",function(){google.script.host.close()});' +
@@ -608,8 +632,8 @@ function rotateDialogHtml_(): string {
   let options = '';
   for (const c of clients) {
     const sel = c.code === selectedCode ? ' selected' : '';
-    const label = c.owner + ' (' + c.code + ')' + (c.hint ? ' — ' + c.hint : '');
-    options += '<option value="' + c.code + '"' + sel + '>' + label + '</option>';
+    const label = escapeHtml_(c.owner + ' (' + c.code + ')' + (c.hint ? ' — ' + c.hint : ''));
+    options += '<option value="' + escapeHtml_(c.code) + '"' + sel + '>' + label + '</option>';
   }
 
   return '<style>' + css_() +
@@ -643,7 +667,7 @@ function rotateDialogHtml_(): string {
     '</div>' +
 
     '<script>' +
-    'var clients=' + JSON.stringify(clients) + ';' +
+    'var clients=' + safeJsonEmbed_(clients) + ';' +
 
     'document.getElementById("cancelBtn").addEventListener("click",function(){google.script.host.close()});' +
     'document.getElementById("submitBtn").addEventListener("click",onSubmit);' +
@@ -676,9 +700,9 @@ function rotateDialogHtml_(): string {
     'function onResult(r){' +
       'if(!r){onFail({message:"No response"});return}' +
       'if(!r.success){setLoading(false);showErr(r.error||"Unknown error");return}' +
-      'var m="Token rotated!";' +
-      'if(r.emailSent)m+=" New link sent via email.";' +
-      'showOk(m);' +
+      'if(r.error&&!r.emailSent){' +
+        'setLoading(false);showErr(r.error);return}' +
+      'showOk("Token rotated! New link sent via email.");' +
       'setTimeout(function(){google.script.host.close()},2000);' +
     '}' +
 
@@ -712,22 +736,36 @@ function rotateClientTokenFromDialog(
   const normalizedCode = InputNormalizer.text(clientCode);
   if (!normalizedCode) return { success: false, result: '', error: 'missing_client_code' };
 
-  // 先檢查 email 是否存在，沒有就擋住
-  const config = AppConfig.load();
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(config.clientsSheetName);
-  if (!sheet) return { success: false, result: '', error: 'clients sheet not found' };
-
   const { repository } = buildRuntimeContext_();
-  const result = repository.withScriptLock(() => repository.rotateClientToken(normalizedCode));
+
+  // email 檢查 + token rotate 在同一個 lock 內，確保原子性
+  const result = repository.withScriptLock(() => {
+    const config = AppConfig.load();
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(config.clientsSheetName);
+    if (!sheet) return { success: false, result: '', error: 'clients sheet not found' } as ApiResult;
+
+    // 先讀 email，沒有就擋住，不執行 rotate
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) return { success: false, result: '', error: 'client_not_found' } as ApiResult;
+    const data = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+    let clientEmail = '';
+    for (let i = 0; i < data.length; i++) {
+      if (InputNormalizer.text(data[i][0]) === normalizedCode) {
+        clientEmail = InputNormalizer.text(data[i][2]);
+        break;
+      }
+    }
+    if (!clientEmail || !clientEmail.includes('@')) {
+      return { success: false, result: '', error: 'This client has no email on record. Please add email to the Sheet first.' } as ApiResult;
+    }
+
+    return repository.rotateClientToken(normalizedCode);
+  });
 
   if (!result.success || !result.result) return result;
 
   const resultEmail = String(result.email || '');
   const resultOwner = String(result.ownerName || normalizedCode);
-
-  if (!resultEmail || !resultEmail.includes('@')) {
-    return { success: false, result: '', error: 'This client has no email on record. Please add email to the Sheet first.' };
-  }
 
   const subject = 'Your ShortYou access link has been rotated';
   const body = [
@@ -748,7 +786,13 @@ function rotateClientTokenFromDialog(
   try {
     GmailApp.sendEmail(resultEmail, subject, body);
   } catch (e: any) {
-    return { success: false, result: '', error: 'Token rotated but email failed: ' + (e.message || e) };
+    Logger.log(JSON.stringify({ clientCode: normalizedCode, rotated: true, emailFailed: true, reason: (e.message || e) }));
+    return {
+      success: true,
+      result: result.result,
+      emailSent: false,
+      error: 'Token rotated but email failed: ' + (e.message || e) + '. Copy the link from the result field.'
+    };
   }
 
   Logger.log(JSON.stringify({ clientCode: normalizedCode, rotated: true, emailSent: true }));

@@ -229,6 +229,11 @@ class SheetRepository {
     noteInput: string,
     emailInput: string
   ): ApiResult {
+    const emailNormalized = InputNormalizer.text(emailInput);
+    if (!emailNormalized || !emailNormalized.includes('@')) {
+      return { success: false, result: '', error: 'valid_email_required' };
+    }
+
     const capabilityToken = RandomUtil.randomToken(this.config.capabilityTokenLength);
     const capabilityTokenHash = DigestUtil.sha256Hex(capabilityToken);
     const clientCode = this.generateUniqueClientCode_();
@@ -248,7 +253,6 @@ class SheetRepository {
     const quotaResetAt = DateUtil.nextUtcDayIso(now);
     const tokenHint = `${capabilityToken.slice(0, 6)}...`;
     const note = InputNormalizer.text(noteInput);
-    const email = InputNormalizer.text(emailInput);
 
     this.config.requirePublicSiteUrl();
 
@@ -256,7 +260,7 @@ class SheetRepository {
     clientsSheet.appendRow([
       clientCode,
       ownerName,
-      email,
+      emailNormalized,
       'active',
       capabilityTokenHash,
       tokenHint,

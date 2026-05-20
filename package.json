@@ -1,7 +1,7 @@
 {
   "name": "shortyou",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0-rc.1",
   "description": "ShortYou frontend and GAS backend pipeline",
   "scripts": {
     "build": "npm run build:gas",

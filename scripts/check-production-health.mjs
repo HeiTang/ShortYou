@@ -32,6 +32,16 @@ const readInt = (value, fallback) => {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const describeError = (error) => {
+  if (!error) return 'unknown error';
+  const cause = error.cause;
+  if (!cause) return error.message;
+  const causeDetail = cause.code
+    ? `${cause.code}${cause.message ? `: ${cause.message}` : ''}`
+    : cause.message || String(cause);
+  return `${error.message} (cause: ${causeDetail})`;
+};
+
 const normalizeComparableUrl = (value) => {
   const url = new URL(value);
   const pathname = url.pathname === '/' ? '' : url.pathname.replace(/\/+$/u, '');
@@ -279,7 +289,7 @@ for (let attempt = 1; attempt <= totalAttempts; attempt += 1) {
     process.exit(0);
   } catch (error) {
     lastFailure = error;
-    console.error(`[production-health] attempt ${attempt}/${totalAttempts} failed: ${error.message}`);
+    console.error(`[production-health] attempt ${attempt}/${totalAttempts} failed: ${describeError(error)}`);
     if (attempt < totalAttempts) {
       await sleep(retryDelayMs);
     }
@@ -288,7 +298,7 @@ for (let attempt = 1; attempt <= totalAttempts; attempt += 1) {
 
 const failureErrors = Array.isArray(lastFailure?.validationErrors)
   ? lastFailure.validationErrors
-  : [lastFailure?.message || 'unknown production health check failure'];
+  : [describeError(lastFailure) || 'unknown production health check failure'];
 const failureSummary = lastFailure?.summary || null;
 
 console.log(JSON.stringify({ success: false, errors: failureErrors, summary: failureSummary }, null, 2));

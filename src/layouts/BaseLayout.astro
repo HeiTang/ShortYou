@@ -30,6 +30,19 @@ const {
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="alternate icon" href="/favicon.ico" />
     <slot name="head" />
+    {import.meta.env.PROD && (
+      <>
+        <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-MRVS2ZGFXF"></script>
+        <script is:inline>
+          window.dataLayer = window.dataLayer || [];
+          function gtag() { dataLayer.push(arguments); }
+          gtag('js', new Date());
+          gtag('config', 'G-MRVS2ZGFXF', {
+            page_location: window.location.origin + window.location.pathname
+          });
+        </script>
+      </>
+    )}
     <script is:inline>
       // Earliest possible redirect detection — runs before body renders.
       (function () {

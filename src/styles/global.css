@@ -202,11 +202,11 @@ html.is-redirecting .redirect-overlay {
 }
 
 .url-input {
-  @apply w-full pr-36;
+  @apply h-[52px] w-full pr-28;
 }
 
 .url-actions {
-  @apply absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-1;
+  @apply absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-2;
 }
 
 .input-help {
@@ -266,12 +266,36 @@ html.is-redirecting .redirect-overlay {
   @apply opacity-100;
 }
 
-.flat-btn {
-  @apply shrink-0 rounded-lg border border-cyan-400/60 bg-cyan-500/15 px-4 py-2.5 text-sm font-semibold text-cyan-300 transition-all duration-200 hover:border-cyan-300 hover:bg-cyan-400/25 hover:text-cyan-100 hover:shadow-[0_0_16px_rgba(56,189,248,0.15)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-none;
+.submit-wrap {
+  @apply relative inline-flex;
 }
 
-.flat-btn-inline {
-  @apply h-9 px-3 py-0 text-xs;
+.submit-btn {
+  @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-cyan-300 text-zinc-950 transition-[background-color,transform] duration-150 hover:bg-cyan-200 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-500 disabled:active:scale-100;
+}
+
+.submit-hint {
+  @apply pointer-events-none absolute bottom-full right-0 mb-2 whitespace-nowrap rounded-md bg-zinc-800 px-2 py-1 text-xs text-slate-100 opacity-0;
+}
+
+.submit-wrap:hover .submit-hint,
+.submit-wrap:focus-within .submit-hint {
+  @apply opacity-100;
+}
+
+.submit-spinner,
+.submit-btn[aria-busy="true"] .submit-arrow {
+  display: none;
+}
+
+.submit-btn[aria-busy="true"] .submit-spinner {
+  @apply block animate-spin motion-reduce:animate-none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submit-btn {
+    transition: none;
+  }
 }
 
 .field-error {

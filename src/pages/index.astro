@@ -21,13 +21,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       Shorten it !
     </p>
 
-    <div class="mx-auto w-full max-w-xl space-y-3">
+    <form id="shortenForm" class="mx-auto w-full max-w-xl space-y-3">
       <div class="url-row">
         <input
           id="url"
           type="text"
           placeholder="https://purr.tw"
           aria-label="Target URL"
+          enterkeyhint="go"
           autocomplete="off"
           class="flat-input url-input"
         />
@@ -45,7 +46,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
               <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 0 1 0 2.8 2 2 0 0 1-2.8 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 0 1-4 0v-.2a1 1 0 0 0-.7-.9 1 1 0 0 0-1 .2l-.2.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 0 1 0-4h.2a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1l-.1-.2a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 0 1 4 0v.2a1 1 0 0 0 .7.9 1 1 0 0 0 1-.2l.2-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a2 2 0 0 1 0 4h-.2a1 1 0 0 0-.9.7z"></path>
             </svg>
           </button>
-          <button id="btn" class="flat-btn flat-btn-inline hidden" disabled>Short it !</button>
+          <span class="submit-wrap">
+            <button id="btn" type="submit" class="submit-btn" aria-label="Shorten URL" aria-busy="false" disabled>
+              <svg class="submit-arrow h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"></path></svg>
+              <svg class="submit-spinner h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9" opacity=".25"></circle><path d="M12 3a9 9 0 0 1 9 9" stroke-linecap="round"></path></svg>
+            </button>
+            <span class="submit-hint" aria-hidden="true">Shorten URL</span>
+          </span>
         </div>
       </div>
       <div id="aliasPanel" class="alias-panel is-collapsed">
@@ -105,7 +112,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
       <p id="resultFeedback" class="sr-only" role="status" aria-live="polite"></p>
-    </div>
+    </form>
   </section>
 
   <div id="redirectOverlay" class="redirect-overlay" slot="afterMain">

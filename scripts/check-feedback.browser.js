@@ -4,10 +4,16 @@
   const check = (condition, message) => {
     if (!condition) throw new Error(message);
   };
+  let requestDelay = 0;
+  let createRequests = 0;
   let response = { success: false, error: 'create_failed' };
   await page.route('**/*', async (route) => {
     const request = route.request();
-    if (request.method() === 'POST') return route.fulfill({ json: response });
+    if (request.method() === 'POST') {
+      createRequests += 1;
+      if (requestDelay) await page.waitForTimeout(requestDelay);
+      return route.fulfill({ json: response });
+    }
     if (request.url().includes('challenges.cloudflare.com/turnstile/')) {
       return route.fulfill({ contentType: 'application/javascript', body: `
         window.turnstile = {
@@ -37,6 +43,9 @@
     for (const width of [390, 1280]) {
       await page.setViewportSize({ width, height: 844 });
       await page.goto('http://127.0.0.1:4321/');
+      check(await page.locator('#btn').isVisible() && await page.locator('#btn').isDisabled(), 'Empty submit must remain visible and disabled');
+      const button = await page.locator('#btn').boundingBox();
+      check(button.width === 44 && button.height === 44, 'Submit target must be 44px square');
       await page.locator('#url').fill('https://example.com');
       check(await text('modeHint') === 'Playground only', 'Mode label must be concise');
       check(await page.locator('#modeDescription').isHidden(), 'Mode description must be collapsed');
@@ -44,7 +53,9 @@
       check(await page.locator('#modeDescription').isVisible(), 'Mode description must open on tap');
       await page.locator('#modeSummary').press('Enter');
       check(await page.locator('#modeDescription').isHidden(), 'Mode description must close with keyboard');
-      await page.locator('#btn').click();
+      await page.locator('#btn').focus();
+      check(await page.locator('.submit-hint').evaluate((element) => getComputedStyle(element).opacity === '1'), 'Keyboard focus must reveal hint');
+      await page.locator('#url').press('Enter');
       await page.locator('#resultCard:not(.hidden)').waitFor();
       check(await page.locator('#modeSummary').isHidden(), 'Playground hint must hide when result appears');
       const cardHeight = (await page.locator('#resultCard').boundingBox()).height;
@@ -80,6 +91,23 @@
       check(Math.abs(toast.x + toast.width / 2 - width / 2) < 1, 'Toast must be centered');
       const footer = await page.locator('footer').boundingBox();
       check(toast.y + toast.height + 16 <= footer.y, 'Toast must clear footer text by at least 16px');
+      await page.locator('#url').fill('https://example.com');
+      await verify();
+      response = { success: true, result: 'loading-test' };
+      requestDelay = 700;
+      const requestsBefore = createRequests;
+      await page.locator('#url').press('Enter');
+      await page.waitForFunction(() => document.querySelector('#btn').getAttribute('aria-busy') === 'true');
+      check(await page.locator('.submit-spinner').isVisible(), 'Pending submit must show spinner');
+      const busyButton = await page.locator('#btn').boundingBox();
+      check(busyButton.width === 44 && busyButton.height === 44, 'Loading must preserve button size');
+      await page.locator('#url').fill('https://example.org');
+      check(await page.locator('#btn').isDisabled(), 'Editing must not re-enable pending submit');
+      await page.evaluate(() => document.querySelector('#shortenForm').requestSubmit());
+      await page.waitForFunction(() => document.querySelector('#btn').getAttribute('aria-busy') === 'false');
+      check(createRequests === requestsBefore + 1, 'Pending form must reject duplicate submissions');
+      check(await page.locator('.submit-arrow').isVisible(), 'Completion must restore arrow');
+      requestDelay = 0;
       await page.evaluate(() => window.testVerification['expired-callback']());
       check((await text('toast')).includes('已過期'), 'Expired verification must float');
       await page.evaluate(() => window.testVerification['error-callback']());

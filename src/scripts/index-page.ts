@@ -60,6 +60,7 @@ export function initIndexPage(config: IndexPageConfig): void {
   const aliasPanel = getById<HTMLElement>('aliasPanel');
   const aliasWrap = getById<HTMLElement>('aliasWrap');
   const submitButton = getById<HTMLButtonElement>('btn');
+  const shortenForm = getById<HTMLFormElement>('shortenForm');
   const turnstileWrap = getById<HTMLElement>('turnstileWidget');
   const modeHint = getById<HTMLElement>('modeHint');
   const modeSummary = getById<HTMLElement>('modeSummary');
@@ -81,6 +82,7 @@ export function initIndexPage(config: IndexPageConfig): void {
     !aliasPanel ||
     !aliasWrap ||
     !submitButton ||
+    !shortenForm ||
     !turnstileWrap ||
     !modeHint ||
     !modeSummary ||
@@ -102,6 +104,7 @@ export function initIndexPage(config: IndexPageConfig): void {
   let turnstileVerified = false;
   let ip = '';
   let copyTimer = 0;
+  let isSubmitting = false;
   let turnstileScriptLoaded = false;
   let turnstileWidgetId = '';
 
@@ -164,14 +167,9 @@ export function initIndexPage(config: IndexPageConfig): void {
   const updateSubmitState = (): void => {
     const valid = inputUrl.value.trim().startsWith('http');
     aliasController.syncSubmitButton(submitButton, valid);
-    if (isAuthorizedMode()) {
-      submitButton.textContent = 'Short it !';
-      submitButton.disabled = !(valid && turnstileVerified);
-      return;
-    }
-
-    submitButton.textContent = 'Short it !';
-    submitButton.disabled = !valid;
+    submitButton.disabled = isSubmitting || !valid || (isAuthorizedMode() && !turnstileVerified);
+    submitButton.setAttribute('aria-busy', String(isSubmitting));
+    submitButton.setAttribute('aria-label', isSubmitting ? 'Shortening URL' : 'Shorten URL');
   };
 
   const clearTurnstileState = (): void => {
@@ -334,7 +332,9 @@ export function initIndexPage(config: IndexPageConfig): void {
     updateSubmitState();
   });
 
-  submitButton.addEventListener('click', async () => {
+  shortenForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (isSubmitting || submitButton.disabled) return;
     const url = inputUrl.value.trim();
     if (!url.startsWith('http')) return;
     clearFormFeedback();
@@ -347,6 +347,8 @@ export function initIndexPage(config: IndexPageConfig): void {
       }
 
       const submittedToken = turnstileToken;
+      isSubmitting = true;
+      updateSubmitState();
 
       try {
         const data = await postForm<ApiResult>(api, {
@@ -370,6 +372,7 @@ export function initIndexPage(config: IndexPageConfig): void {
         showCreateError('create_failed');
         return;
       } finally {
+        isSubmitting = false;
         resetTurnstileWidget();
       }
     }

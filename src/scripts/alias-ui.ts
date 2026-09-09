@@ -36,7 +36,6 @@ export function createAliasUIController(elements: AliasUIElements): AliasUIContr
 
   const syncSubmitButton = (button: HTMLButtonElement, canSubmit: boolean): void => {
     syncAliasState();
-    button.classList.toggle('hidden', !canSubmit);
     button.disabled = !canSubmit;
   };
 

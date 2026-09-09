@@ -1,4 +1,7 @@
 const ERROR_TEXT: Record<string, string> = {
+  missing_url: '請輸入要縮短的網址。',
+  invalid_json: '請求格式不正確，請重新整理後再試。',
+  alias_generation_failed: '暫時無法產生短網址，請再試一次。',
   capability_token_required: '缺少授權資訊，請重新開啟建立連結。',
   unauthorized_client: '授權資訊無效，請重新取得建立連結。',
   client_disabled: '此建立權限已停用，請聯絡管理者。',

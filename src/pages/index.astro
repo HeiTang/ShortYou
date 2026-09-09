@@ -28,7 +28,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           type="text"
           placeholder="https://purr.tw"
           aria-label="Target URL"
-          aria-describedby="urlFeedback"
           autocomplete="off"
           class="flat-input url-input"
         />
@@ -49,7 +48,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <button id="btn" class="flat-btn flat-btn-inline hidden" disabled>Short it !</button>
         </div>
       </div>
-      <p id="urlFeedback" class="inline-feedback" role="status" aria-live="polite"></p>
       <div id="aliasPanel" class="alias-panel is-collapsed">
         <div id="aliasWrap" class="alias-shell is-disabled">
           <span class="alias-prefix">#</span>
@@ -58,13 +56,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             type="text"
             placeholder="Customize link (optional)"
             aria-label="Custom alias"
-            aria-describedby="aliasFeedback"
             autocomplete="off"
             class="alias-input"
           />
         </div>
       </div>
-      <p id="aliasFeedback" class="inline-feedback" role="status" aria-live="polite"></p>
 
       <details class="mode-hint text-xs text-slate-400">
         <summary id="modeSummary" title="This page returns a mock result and does not call the create API.">
@@ -77,8 +73,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <p id="modeDescription" class="mt-2">This page returns a mock result and does not call the create API.</p>
       </details>
       <div id="turnstileWidget" class="hidden"></div>
-      <p id="verificationFeedback" class="inline-feedback" role="status" aria-live="polite"></p>
-      <p id="formFeedback" class="inline-feedback" role="status" aria-live="polite"></p>
 
       <div id="resultCard" class="result-card hidden">
         <div class="result-link-row">
@@ -129,9 +123,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   <script>
     import { getFrontendConfig } from '../scripts/config';
-    import { initIndexPage } from '../scripts/index-page';
+    import { initIndexPage, showToast } from '../scripts/index-page';
 
-    const { api, turnstileSiteKey } = getFrontendConfig();
-    initIndexPage({ api, turnstileSiteKey });
+    try {
+      initIndexPage(getFrontendConfig());
+    } catch {
+      document.documentElement.classList.remove('is-redirecting');
+      showToast('服務設定或初始化失敗，請稍後再試。', true);
+    }
   </script>
 </BaseLayout>

@@ -81,32 +81,81 @@
       const footer = await page.locator('footer').boundingBox();
       check(toast.y + toast.height + 16 <= footer.y, 'Toast must clear footer text by at least 16px');
       await page.evaluate(() => window.testVerification['expired-callback']());
-      check((await text('verificationFeedback')).includes('已過期'), 'Expired verification must be inline');
+      check((await text('toast')).includes('已過期'), 'Expired verification must float');
+      await page.evaluate(() => window.testVerification['error-callback']());
+      check((await text('toast')).includes('驗證失敗'), 'Verification callback error must float');
       await page.locator('#url').fill('https://example.com');
       await submit('invalid_url');
       await page.waitForFunction(() => document.querySelector('#url').getAttribute('aria-invalid') === 'true');
       await page.locator('#url').fill('https://example.org');
-      check(await text('urlFeedback') === '', 'Editing must clear field error');
+      check(await page.locator('#url').getAttribute('aria-invalid') === null, 'Editing must clear field error');
       await page.locator('#aliasToggle').click();
       await page.locator('#alias').fill('taken');
       await submit('alias_exists');
-      await page.waitForFunction(() => document.querySelector('#aliasFeedback').textContent.length > 0);
-      const field = await page.locator('#aliasPanel').boundingBox();
-      const error = await page.locator('#aliasFeedback').boundingBox();
-      check(error.y >= field.y + field.height, 'Alias error must not be clipped by panel');
-      await submit('create_failed');
-      await page.waitForFunction(() => document.querySelector('#formFeedback').textContent.length > 0);
-      await page.waitForTimeout(4200);
-      check((await text('formFeedback')).includes('建立短網址失敗'), 'Create failure must persist');
-      await submit('captcha_failed');
-      await page.waitForFunction(() => document.querySelector('#verificationFeedback').textContent.length > 0);
+      await page.waitForFunction(() => document.querySelector('#alias').getAttribute('aria-invalid') === 'true');
+      check((await text('toast')).includes('自訂短網址已被使用'), 'Alias error must float');
+      const codes = [
+        'capability_token_required', 'unauthorized_client', 'client_disabled', 'token_expired',
+        'client_quota_exceeded', 'create_failed', 'missing_url', 'invalid_json', 'alias_generation_failed',
+        'invalid_url', 'alias_exists', 'invalid_alias', 'reserved_alias', 'captcha_required', 'captcha_failed',
+        'timeout-or-duplicate', 'missing-input-response', 'invalid-input-response', 'missing-input-secret',
+        'invalid-input-secret', 'bad-request', 'internal-error', 'turnstile_fetch_failed'
+      ];
+      for (const code of codes) {
+        await submit(code);
+        await page.waitForFunction(() => document.querySelector('#toast').classList.contains('is-error'));
+        check((await text('toast')).length > 0, `${code}: error message required`);
+        check(await page.locator('#toast').evaluate((element) => getComputedStyle(element).position === 'fixed'), `${code}: error must float`);
+        check(await page.locator('#urlFeedback, #aliasFeedback, #verificationFeedback, #formFeedback').count() === 0, 'Errors must not occupy form space');
+        if (code === 'unauthorized_client') check(await text('toast') === '授權資訊無效，請重新取得建立連結。', 'Authorization error must be specific');
+      }
+      response = { success: false, error: 'captcha_failed', 'error-codes': ['invalid-input-secret'] };
+      await verify();
+      await page.locator('#btn').click();
+      await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('設定錯誤'));
+      await page.waitForFunction(() => document.querySelector('#toast').textContent === '');
       await submit();
       await page.waitForFunction(() => document.querySelector('#resultLink').textContent.endsWith('#test-link'));
-      check(await text('formFeedback') === '' && await text('verificationFeedback') === '', 'Success must clear errors');
-      check(await text('toast') === '' && await text('modeHint') === 'Authorized mode', 'Real result must not show duplicate success or preview note');
+      check(await text('toast') === '' && await text('modeHint') === 'Authorized mode', 'Success must clear old error');
       check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Page must not overflow');
-      results.push(`${width}px: preview, copy, persistent errors, field routing, recovery and layout passed`);
+      results.push(`${width}px: preview, copy, all 23 error codes, recovery and layout passed`);
     }
+    await page.route('**/src/scripts/config.ts*', (route) => route.fulfill({
+      contentType: 'application/javascript',
+      body: "export function getFrontendConfig() { throw new Error('missing config'); }"
+    }));
+    await page.goto('about:blank');
+    await page.goto('http://127.0.0.1:4321/');
+    await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('初始化失敗'));
+    await page.unroute('**/src/scripts/config.ts*');
+
+    await page.route('**/src/scripts/config.ts*', (route) => route.fulfill({
+      contentType: 'application/javascript',
+      body: "export function getFrontendConfig() { return {api: '/test-api', turnstileSiteKey: ''}; }"
+    }));
+    await page.goto('about:blank');
+    await page.goto('http://127.0.0.1:4321/#t=feedback-test');
+    await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('驗證服務尚未設定'));
+    check(!(await text('toast')).includes('Authorized mode enabled'), 'Mode notice must not overwrite setup error');
+    await page.unroute('**/src/scripts/config.ts*');
+
+    await page.route('**/turnstile/v0/api.js*', (route) => route.abort());
+    await page.goto('about:blank');
+    await page.goto('http://127.0.0.1:4321/#t=feedback-test');
+    await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('驗證服務載入失敗'));
+    await page.unroute('**/turnstile/v0/api.js*');
+
+    for (const networkFailure of [false, true]) {
+      await page.route('**/*query=*', (route) => networkFailure ? route.abort() : route.fulfill({ json: { success: false } }));
+      await page.goto('about:blank');
+      await page.goto('http://127.0.0.1:4321/#missing-test');
+      const expected = networkFailure ? '短網址查詢失敗' : '找不到這個短網址';
+      await page.waitForFunction((message) => document.querySelector('#toast').textContent.includes(message), expected);
+      check(await page.evaluate(() => Number(getComputedStyle(document.querySelector('#toast')).zIndex) > Number(getComputedStyle(document.querySelector('#redirectOverlay')).zIndex)), 'Redirect error must be above overlay');
+      await page.waitForURL('http://127.0.0.1:4321/');
+      await page.unroute('**/*query=*');
+    }
+    results.push('Initialization, missing site key, script load failure and both redirect errors passed');
     return results;
   } finally {
     await page.unrouteAll({ behavior: 'wait' });

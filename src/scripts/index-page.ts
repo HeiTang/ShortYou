@@ -22,8 +22,25 @@ type ApiResult = {
 
 type TurnstileApi = NonNullable<Window['turnstile']>;
 
+let toastTimer = 0;
+
+export function showToast(text: string, isError = false): void {
+  const toast = getById<HTMLElement>('toast');
+  if (!toast) return;
+  window.clearTimeout(toastTimer);
+  toast.textContent = text;
+  toast.classList.toggle('is-error', isError);
+  toast.classList.toggle('show', Boolean(text));
+  if (text) {
+    toastTimer = window.setTimeout(() => showToast(''), 4000);
+  }
+}
+
 export function initIndexPage(config: IndexPageConfig): void {
-  if (!config || !config.api) return;
+  if (!config || !config.api) {
+    showToast('服務設定不完整，請稍後再試。', true);
+    return;
+  }
 
   const api = config.api;
   const turnstileSiteKey = config.turnstileSiteKey;
@@ -54,10 +71,6 @@ export function initIndexPage(config: IndexPageConfig): void {
   const qrContainer = getById<HTMLElement>('qrContainer');
   const qrCanvas = getById<HTMLCanvasElement>('qrCanvas');
   const toast = getById<HTMLElement>('toast');
-  const urlFeedback = getById<HTMLElement>('urlFeedback');
-  const aliasFeedback = getById<HTMLElement>('aliasFeedback');
-  const verificationFeedback = getById<HTMLElement>('verificationFeedback');
-  const formFeedback = getById<HTMLElement>('formFeedback');
   const resultFeedback = getById<HTMLElement>('resultFeedback');
 
   if (
@@ -79,10 +92,6 @@ export function initIndexPage(config: IndexPageConfig): void {
     !qrContainer ||
     !qrCanvas ||
     !toast ||
-    !urlFeedback ||
-    !aliasFeedback ||
-    !verificationFeedback ||
-    !formFeedback ||
     !resultFeedback
   ) {
     return;
@@ -92,7 +101,6 @@ export function initIndexPage(config: IndexPageConfig): void {
   let turnstileToken = '';
   let turnstileVerified = false;
   let ip = '';
-  let toastTimer = 0;
   let copyTimer = 0;
   let turnstileScriptLoaded = false;
   let turnstileWidgetId = '';
@@ -103,6 +111,7 @@ export function initIndexPage(config: IndexPageConfig): void {
     window.clearTimeout(copyTimer);
     copyBtn.classList.remove('is-copied');
     resultFeedback.textContent = '';
+    showToast('');
     currentShortUrl = url;
     resultLink.href = url;
     resultLink.textContent = url;
@@ -118,21 +127,7 @@ export function initIndexPage(config: IndexPageConfig): void {
     aliasWrap
   });
 
-  const showToast = (text: string, isError = false): void => {
-    window.clearTimeout(toastTimer);
-    toast.textContent = text;
-    toast.classList.toggle('is-error', isError);
-    toast.classList.add('show');
-    toastTimer = window.setTimeout(() => {
-      toast.classList.remove('show');
-      toast.textContent = '';
-    }, 4000);
-  };
-
   const clearFormFeedback = (): void => {
-    urlFeedback.textContent = '';
-    aliasFeedback.textContent = '';
-    formFeedback.textContent = '';
     inputUrl.removeAttribute('aria-invalid');
     inputAlias.removeAttribute('aria-invalid');
   };
@@ -140,21 +135,12 @@ export function initIndexPage(config: IndexPageConfig): void {
   const showCreateError = (code: string | undefined): void => {
     const message = humanizeBackendError(code, '建立短網址失敗，請稍後再試。');
     if (code === 'invalid_url') {
-      urlFeedback.textContent = message;
       inputUrl.setAttribute('aria-invalid', 'true');
     } else if (code && ['alias_exists', 'invalid_alias', 'reserved_alias'].includes(code)) {
       aliasController.setOpen(true);
-      aliasFeedback.textContent = message;
       inputAlias.setAttribute('aria-invalid', 'true');
-    } else if (code && (code.startsWith('captcha_') || [
-      'timeout-or-duplicate', 'missing-input-response', 'invalid-input-response',
-      'missing-input-secret', 'invalid-input-secret', 'bad-request', 'internal-error',
-      'turnstile_fetch_failed'
-    ].includes(code))) {
-      verificationFeedback.textContent = message;
-    } else {
-      formFeedback.textContent = message;
     }
+    showToast(message, true);
   };
 
   const getTurnstileApi = (): TurnstileApi | null => {
@@ -214,22 +200,21 @@ export function initIndexPage(config: IndexPageConfig): void {
         turnstileToken = token;
         turnstileVerified = true;
         updateSubmitState();
-        verificationFeedback.textContent = '';
       },
       'expired-callback': () => {
         resetTurnstileWidget();
-        verificationFeedback.textContent = 'Cloudflare Turnstile 已過期，請重新驗證。';
+        showToast('Cloudflare Turnstile 已過期，請重新驗證。', true);
       },
       'error-callback': () => {
         resetTurnstileWidget();
-        verificationFeedback.textContent = humanizeBackendError('captcha_failed');
+        showToast(humanizeBackendError('captcha_failed'), true);
       }
     });
   };
 
   const setupTurnstile = (): void => {
     if (!turnstileSiteKey) {
-      verificationFeedback.textContent = '驗證服務尚未設定，暫時無法建立短網址。';
+      showToast('驗證服務尚未設定，暫時無法建立短網址。', true);
       return;
     }
 
@@ -249,7 +234,7 @@ export function initIndexPage(config: IndexPageConfig): void {
     script.async = true;
     script.defer = true;
     script.addEventListener('error', () => {
-      verificationFeedback.textContent = '驗證服務載入失敗，請重新整理頁面再試。';
+      showToast('驗證服務載入失敗，請重新整理頁面再試。', true);
     });
     document.body.appendChild(script);
     turnstileScriptLoaded = true;
@@ -258,10 +243,10 @@ export function initIndexPage(config: IndexPageConfig): void {
   const enterAuthorizedMode = (token: string): void => {
     capabilityToken = token;
     history.replaceState({}, '', `${window.location.pathname}${window.location.search}`);
+    showToast('Authorized mode enabled.');
     setupTurnstile();
     updateModeHint();
     updateSubmitState();
-    showToast('Authorized mode enabled.');
     void fetchIPFromCloudflare().then((detectedIp) => {
       ip = detectedIp;
     });
@@ -311,8 +296,8 @@ export function initIndexPage(config: IndexPageConfig): void {
 
     const showError = (msg: string): void => {
       if (redirectLabel) redirectLabel.textContent = 'error';
-      if (redirectDest) scrambleText(redirectDest, msg, { duration: 300 });
-      setTimeout(() => { window.location.href = pageBase; }, 1500);
+      showToast(msg, true);
+      setTimeout(() => { window.location.href = pageBase; }, 4000);
     };
 
     if (hash === 'demo-preview') {
@@ -324,30 +309,27 @@ export function initIndexPage(config: IndexPageConfig): void {
           if (json && json.success && json.result) {
             showDest(json.result);
           } else {
-            showError('link not found');
+            showError('找不到這個短網址。');
           }
         })
         .catch(() => {
-          showError('something went wrong');
+          showError('短網址查詢失敗，請稍後再試。');
         });
     }
     return;
   }
 
   inputUrl.addEventListener('input', () => {
-    urlFeedback.textContent = '';
     inputUrl.removeAttribute('aria-invalid');
     updateSubmitState();
   });
 
   inputAlias.addEventListener('input', () => {
-    aliasFeedback.textContent = '';
     inputAlias.removeAttribute('aria-invalid');
   });
 
   aliasToggle.addEventListener('click', () => {
     aliasController.toggle();
-    aliasFeedback.textContent = '';
     inputAlias.removeAttribute('aria-invalid');
     updateSubmitState();
   });
@@ -356,10 +338,11 @@ export function initIndexPage(config: IndexPageConfig): void {
     const url = inputUrl.value.trim();
     if (!url.startsWith('http')) return;
     clearFormFeedback();
+    showToast('');
 
     if (isAuthorizedMode()) {
       if (!turnstileVerified || !turnstileToken) {
-        verificationFeedback.textContent = humanizeBackendError('captcha_required');
+        showToast(humanizeBackendError('captcha_required'), true);
         return;
       }
 

@@ -321,15 +321,6 @@ html.is-redirecting .redirect-overlay {
   @apply block rounded-lg;
 }
 
-.inline-feedback {
-  @apply text-left text-sm text-rose-300;
-  overflow-wrap: anywhere;
-}
-
-.inline-feedback:empty {
-  margin: 0;
-}
-
 .mode-hint summary {
   @apply inline-flex cursor-pointer list-none items-center gap-1.5 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300;
 }
@@ -357,7 +348,7 @@ html.is-redirecting .redirect-overlay {
 }
 
 .toast {
-  @apply pointer-events-none fixed left-1/2 z-50 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg border border-slate-600 bg-zinc-800 px-4 py-3 text-sm text-slate-100 opacity-0 shadow-lg transition-opacity duration-200 sm:max-w-[400px];
+  @apply pointer-events-none fixed left-1/2 z-[10000] w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg border border-slate-600 bg-zinc-800 px-4 py-3 text-sm text-slate-100 opacity-0 shadow-lg transition-opacity duration-200 sm:max-w-[400px];
   bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
   overflow-wrap: anywhere;
 }

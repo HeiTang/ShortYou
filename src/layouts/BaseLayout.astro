@@ -27,9 +27,21 @@ const {
     <meta name="description" content={description} />
     <meta name="robots" content={robots} />
     {canonical && <link rel="canonical" href={canonical} />}
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="alternate icon" href="/favicon.ico" />
+    <link rel="icon" href="/favicon-shorten.png" type="image/png" sizes="96x96" />
     <slot name="head" />
+    {import.meta.env.PROD && (
+      <>
+        <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-MRVS2ZGFXF"></script>
+        <script is:inline>
+          window.dataLayer = window.dataLayer || [];
+          function gtag() { dataLayer.push(arguments); }
+          gtag('js', new Date());
+          gtag('config', 'G-MRVS2ZGFXF', {
+            page_location: window.location.origin + window.location.pathname
+          });
+        </script>
+      </>
+    )}
     <script is:inline>
       // Earliest possible redirect detection — runs before body renders.
       (function () {
@@ -43,8 +55,8 @@ const {
       html.is-redirecting main { display: none !important; }
     </style>
   </head>
-  <body class="min-h-screen bg-zinc-900 text-slate-100">
-    <main class="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-5">
+  <body class="min-h-dvh bg-zinc-900 text-slate-100">
+    <main class="mx-auto flex min-h-dvh w-full max-w-3xl flex-col px-4 py-[min(1.25rem,3dvh)]">
       <Header />
 
       <slot />

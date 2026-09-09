@@ -37,12 +37,15 @@
     response = error ? { success: false, error } : { success: true, result: 'test-link' };
     await verify();
     await page.locator('#btn').click();
+    await page.waitForFunction(() => document.querySelector('#btn').getAttribute('aria-busy') === 'false');
   };
   const results = [];
   try {
     for (const width of [390, 1280]) {
       await page.setViewportSize({ width, height: 844 });
       await page.goto('http://127.0.0.1:4321/');
+      await page.evaluate(() => sessionStorage.clear());
+      await page.reload();
       check(await page.locator('#url').inputValue() === 'https://', 'URL must start with HTTPS');
       check(await page.locator('#btn').isVisible() && await page.locator('#btn').isDisabled(), 'Protocol alone must keep submit disabled');
       for (const invalid of ['', 'http://', 'https://', 'httpjunk', 'ftp://example.com']) {

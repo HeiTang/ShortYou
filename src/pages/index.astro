@@ -28,6 +28,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           type="text"
           placeholder="https://purr.tw"
           aria-label="Target URL"
+          aria-describedby="urlFeedback"
           autocomplete="off"
           class="flat-input url-input"
         />
@@ -48,6 +49,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <button id="btn" class="flat-btn flat-btn-inline hidden" disabled>Short it !</button>
         </div>
       </div>
+      <p id="urlFeedback" class="inline-feedback" role="status" aria-live="polite"></p>
       <div id="aliasPanel" class="alias-panel is-collapsed">
         <div id="aliasWrap" class="alias-shell is-disabled">
           <span class="alias-prefix">#</span>
@@ -56,24 +58,38 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             type="text"
             placeholder="Customize link (optional)"
             aria-label="Custom alias"
+            aria-describedby="aliasFeedback"
             autocomplete="off"
             class="alias-input"
           />
         </div>
       </div>
+      <p id="aliasFeedback" class="inline-feedback" role="status" aria-live="polite"></p>
 
-      <p id="modeHint" class="text-xs text-slate-400">Playground only: this page returns a mock result and does not call the create API.</p>
+      <details class="mode-hint text-xs text-slate-400">
+        <summary id="modeSummary" title="This page returns a mock result and does not call the create API.">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 7v6m0 4h.01"></path>
+          </svg>
+          <span id="modeHint">Playground only</span>
+        </summary>
+        <p id="modeDescription" class="mt-2">This page returns a mock result and does not call the create API.</p>
+      </details>
       <div id="turnstileWidget" class="hidden"></div>
+      <p id="verificationFeedback" class="inline-feedback" role="status" aria-live="polite"></p>
+      <p id="formFeedback" class="inline-feedback" role="status" aria-live="polite"></p>
 
       <div id="resultCard" class="result-card hidden">
         <div class="result-link-row">
-          <a id="resultLink" class="result-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+          <a id="resultLink" class="result-link" aria-live="polite" aria-atomic="true" href="#" target="_blank" rel="noopener noreferrer"></a>
           <div class="result-actions">
             <button id="copyBtn" type="button" class="icon-btn-sm" aria-label="Copy short link">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="copy-icon h-4 w-4" aria-hidden="true">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
+              <svg class="copy-check h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4 10-10"></path></svg>
             </button>
             <button id="qrBtn" type="button" class="icon-btn-sm" aria-label="Show QR Code">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" aria-hidden="true">
@@ -94,6 +110,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <canvas id="qrCanvas"></canvas>
         </div>
       </div>
+      <p id="resultFeedback" class="sr-only" role="status" aria-live="polite"></p>
     </div>
   </section>
 

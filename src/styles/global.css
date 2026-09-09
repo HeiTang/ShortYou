@@ -321,22 +321,57 @@ html.is-redirecting .redirect-overlay {
   @apply block rounded-lg;
 }
 
+.inline-feedback {
+  @apply text-left text-sm text-rose-300;
+  overflow-wrap: anywhere;
+}
+
+.inline-feedback:empty {
+  margin: 0;
+}
+
+.mode-hint summary {
+  @apply inline-flex cursor-pointer list-none items-center gap-1.5 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300;
+}
+
+.mode-hint summary::-webkit-details-marker {
+  display: none;
+}
+
+#copyBtn.is-copied {
+  @apply text-emerald-300;
+}
+
+.copy-check,
+#copyBtn.is-copied .copy-icon {
+  display: none;
+}
+
+#copyBtn.is-copied .copy-check {
+  display: block;
+}
+
+[aria-invalid="true"],
+.alias-shell:has([aria-invalid="true"]) {
+  @apply border-rose-400;
+}
+
 .toast {
-  @apply pointer-events-none fixed right-4 top-4 z-50 max-w-xs rounded-md border px-3 py-2 text-sm opacity-0 shadow-lg transition;
+  @apply pointer-events-none fixed left-1/2 z-50 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg border border-slate-600 bg-zinc-800 px-4 py-3 text-sm text-slate-100 opacity-0 shadow-lg transition-opacity duration-200 sm:max-w-[400px];
+  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  overflow-wrap: anywhere;
+}
+
+.toast.is-error {
+  @apply border-rose-400 text-rose-200;
 }
 
 .toast.show {
   @apply opacity-100;
 }
 
-.toast.success {
-  @apply border-emerald-500 bg-emerald-500/15 text-emerald-100;
-}
-
-.toast.error {
-  @apply border-rose-500 bg-rose-500/15 text-rose-100;
-}
-
-.toast.warn {
-  @apply border-amber-500 bg-amber-500/15 text-amber-100;
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    transition: none;
+  }
 }

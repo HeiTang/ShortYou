@@ -20,8 +20,6 @@ type ApiResult = {
   'error-codes'?: string[];
 };
 
-type ToastType = 'warn' | 'success' | 'error';
-
 type TurnstileApi = NonNullable<Window['turnstile']>;
 
 export function initIndexPage(config: IndexPageConfig): void {
@@ -47,6 +45,8 @@ export function initIndexPage(config: IndexPageConfig): void {
   const submitButton = getById<HTMLButtonElement>('btn');
   const turnstileWrap = getById<HTMLElement>('turnstileWidget');
   const modeHint = getById<HTMLElement>('modeHint');
+  const modeSummary = getById<HTMLElement>('modeSummary');
+  const modeDescription = getById<HTMLElement>('modeDescription');
   const resultCard = getById<HTMLElement>('resultCard');
   const resultLink = getById<HTMLAnchorElement>('resultLink');
   const copyBtn = getById<HTMLButtonElement>('copyBtn');
@@ -54,6 +54,11 @@ export function initIndexPage(config: IndexPageConfig): void {
   const qrContainer = getById<HTMLElement>('qrContainer');
   const qrCanvas = getById<HTMLCanvasElement>('qrCanvas');
   const toast = getById<HTMLElement>('toast');
+  const urlFeedback = getById<HTMLElement>('urlFeedback');
+  const aliasFeedback = getById<HTMLElement>('aliasFeedback');
+  const verificationFeedback = getById<HTMLElement>('verificationFeedback');
+  const formFeedback = getById<HTMLElement>('formFeedback');
+  const resultFeedback = getById<HTMLElement>('resultFeedback');
 
   if (
     !redirectOverlay ||
@@ -65,13 +70,20 @@ export function initIndexPage(config: IndexPageConfig): void {
     !submitButton ||
     !turnstileWrap ||
     !modeHint ||
+    !modeSummary ||
+    !modeDescription ||
     !resultCard ||
     !resultLink ||
     !copyBtn ||
     !qrBtn ||
     !qrContainer ||
     !qrCanvas ||
-    !toast
+    !toast ||
+    !urlFeedback ||
+    !aliasFeedback ||
+    !verificationFeedback ||
+    !formFeedback ||
+    !resultFeedback
   ) {
     return;
   }
@@ -81,16 +93,21 @@ export function initIndexPage(config: IndexPageConfig): void {
   let turnstileVerified = false;
   let ip = '';
   let toastTimer = 0;
+  let copyTimer = 0;
   let turnstileScriptLoaded = false;
   let turnstileWidgetId = '';
 
   let currentShortUrl = '';
 
   const showResult = (url: string): void => {
+    window.clearTimeout(copyTimer);
+    copyBtn.classList.remove('is-copied');
+    resultFeedback.textContent = '';
     currentShortUrl = url;
     resultLink.href = url;
     resultLink.textContent = url;
     resultCard.classList.remove('hidden');
+    if (!isAuthorizedMode()) modeHint.closest('details')?.classList.add('hidden');
     qrContainer.classList.remove('is-open');
   };
 
@@ -101,20 +118,43 @@ export function initIndexPage(config: IndexPageConfig): void {
     aliasWrap
   });
 
-  const showToast = (text: string, type: ToastType = 'warn'): void => {
-    if (!text) {
-      toast.classList.remove('show', 'success', 'error', 'warn');
-      toast.textContent = '';
-      return;
-    }
-
-    toast.classList.remove('success', 'error', 'warn');
-    toast.classList.add(type === 'error' ? 'error' : type === 'success' ? 'success' : 'warn', 'show');
-    toast.textContent = text;
+  const showToast = (text: string, isError = false): void => {
     window.clearTimeout(toastTimer);
+    toast.textContent = text;
+    toast.classList.toggle('is-error', isError);
+    toast.classList.add('show');
     toastTimer = window.setTimeout(() => {
       toast.classList.remove('show');
-    }, 2600);
+      toast.textContent = '';
+    }, 4000);
+  };
+
+  const clearFormFeedback = (): void => {
+    urlFeedback.textContent = '';
+    aliasFeedback.textContent = '';
+    formFeedback.textContent = '';
+    inputUrl.removeAttribute('aria-invalid');
+    inputAlias.removeAttribute('aria-invalid');
+  };
+
+  const showCreateError = (code: string | undefined): void => {
+    const message = humanizeBackendError(code, '建立短網址失敗，請稍後再試。');
+    if (code === 'invalid_url') {
+      urlFeedback.textContent = message;
+      inputUrl.setAttribute('aria-invalid', 'true');
+    } else if (code && ['alias_exists', 'invalid_alias', 'reserved_alias'].includes(code)) {
+      aliasController.setOpen(true);
+      aliasFeedback.textContent = message;
+      inputAlias.setAttribute('aria-invalid', 'true');
+    } else if (code && (code.startsWith('captcha_') || [
+      'timeout-or-duplicate', 'missing-input-response', 'invalid-input-response',
+      'missing-input-secret', 'invalid-input-secret', 'bad-request', 'internal-error',
+      'turnstile_fetch_failed'
+    ].includes(code))) {
+      verificationFeedback.textContent = message;
+    } else {
+      formFeedback.textContent = message;
+    }
   };
 
   const getTurnstileApi = (): TurnstileApi | null => {
@@ -127,9 +167,12 @@ export function initIndexPage(config: IndexPageConfig): void {
   const isAuthorizedMode = (): boolean => capabilityToken.length > 0;
 
   const updateModeHint = (): void => {
-    modeHint.textContent = isAuthorizedMode()
-      ? 'Authorized mode: real short links will be created after verification.'
-      : 'Playground only: this page returns a mock result and does not call the create API.';
+    modeHint.textContent = isAuthorizedMode() ? 'Authorized mode' : 'Playground only';
+    const description = isAuthorizedMode()
+      ? 'Real short links will be created after verification.'
+      : 'This page returns a mock result and does not call the create API.';
+    modeSummary.title = description;
+    modeDescription.textContent = description;
   };
 
   const updateSubmitState = (): void => {
@@ -171,22 +214,22 @@ export function initIndexPage(config: IndexPageConfig): void {
         turnstileToken = token;
         turnstileVerified = true;
         updateSubmitState();
-        showToast('Cloudflare Turnstile verified.', 'success');
+        verificationFeedback.textContent = '';
       },
       'expired-callback': () => {
         resetTurnstileWidget();
-        showToast('Cloudflare Turnstile 已過期，請重新驗證。', 'warn');
+        verificationFeedback.textContent = 'Cloudflare Turnstile 已過期，請重新驗證。';
       },
       'error-callback': () => {
         resetTurnstileWidget();
-        showToast(humanizeBackendError('captcha_failed'), 'error');
+        verificationFeedback.textContent = humanizeBackendError('captcha_failed');
       }
     });
   };
 
   const setupTurnstile = (): void => {
     if (!turnstileSiteKey) {
-      showToast('Missing Cloudflare Turnstile site key.', 'error');
+      verificationFeedback.textContent = '驗證服務尚未設定，暫時無法建立短網址。';
       return;
     }
 
@@ -205,6 +248,9 @@ export function initIndexPage(config: IndexPageConfig): void {
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileApiLoad';
     script.async = true;
     script.defer = true;
+    script.addEventListener('error', () => {
+      verificationFeedback.textContent = '驗證服務載入失敗，請重新整理頁面再試。';
+    });
     document.body.appendChild(script);
     turnstileScriptLoaded = true;
   };
@@ -215,7 +261,7 @@ export function initIndexPage(config: IndexPageConfig): void {
     setupTurnstile();
     updateModeHint();
     updateSubmitState();
-    showToast('Authorized mode enabled.', 'success');
+    showToast('Authorized mode enabled.');
     void fetchIPFromCloudflare().then((detectedIp) => {
       ip = detectedIp;
     });
@@ -289,21 +335,31 @@ export function initIndexPage(config: IndexPageConfig): void {
   }
 
   inputUrl.addEventListener('input', () => {
+    urlFeedback.textContent = '';
+    inputUrl.removeAttribute('aria-invalid');
     updateSubmitState();
+  });
+
+  inputAlias.addEventListener('input', () => {
+    aliasFeedback.textContent = '';
+    inputAlias.removeAttribute('aria-invalid');
   });
 
   aliasToggle.addEventListener('click', () => {
     aliasController.toggle();
+    aliasFeedback.textContent = '';
+    inputAlias.removeAttribute('aria-invalid');
     updateSubmitState();
   });
 
   submitButton.addEventListener('click', async () => {
     const url = inputUrl.value.trim();
     if (!url.startsWith('http')) return;
+    clearFormFeedback();
 
     if (isAuthorizedMode()) {
       if (!turnstileVerified || !turnstileToken) {
-        showToast('Please complete Cloudflare Turnstile first.', 'error');
+        verificationFeedback.textContent = humanizeBackendError('captcha_required');
         return;
       }
 
@@ -321,15 +377,14 @@ export function initIndexPage(config: IndexPageConfig): void {
 
         if (!data.success || !data.result) {
           const detailedError = (data['error-codes'] && data['error-codes'][0]) || data.error;
-          showToast(humanizeBackendError(detailedError, '建立短網址失敗，請稍後再試。'), 'error');
+          showCreateError(detailedError);
           return;
         }
 
         showResult(`${pageBase}#${data.result}`);
-        showToast('Create success.', 'success');
         return;
       } catch {
-        showToast(humanizeBackendError('create_failed'), 'error');
+        showCreateError('create_failed');
         return;
       } finally {
         resetTurnstileWidget();
@@ -338,16 +393,23 @@ export function initIndexPage(config: IndexPageConfig): void {
 
     const alias = previewAlias();
     showResult(`${pageBase}#${alias}`);
-    showToast('Preview only. Fixed mock result returned without calling create API.', 'success');
   });
 
   copyBtn.addEventListener('click', async () => {
     if (!currentShortUrl) return;
+    window.clearTimeout(copyTimer);
+    copyBtn.classList.remove('is-copied');
+    resultFeedback.textContent = '';
     try {
       await navigator.clipboard.writeText(currentShortUrl);
-      showToast('Copied!', 'success');
+      copyBtn.classList.add('is-copied');
+      resultFeedback.textContent = '已複製';
+      copyTimer = window.setTimeout(() => {
+        copyBtn.classList.remove('is-copied');
+        resultFeedback.textContent = '';
+      }, 2000);
     } catch {
-      showToast('複製失敗', 'error');
+      showToast('複製失敗，請選取連結手動複製。', true);
     }
   });
 
@@ -357,6 +419,9 @@ export function initIndexPage(config: IndexPageConfig): void {
       qrContainer.classList.remove('is-open');
       return;
     }
+    window.clearTimeout(copyTimer);
+    copyBtn.classList.remove('is-copied');
+    resultFeedback.textContent = '';
     try {
       await QRCode.toCanvas(qrCanvas, currentShortUrl, {
         width: 200,
@@ -365,7 +430,7 @@ export function initIndexPage(config: IndexPageConfig): void {
       });
       qrContainer.classList.add('is-open');
     } catch {
-      showToast('QR Code 生成失敗', 'error');
+      showToast('QR Code 生成失敗，請重試或複製連結。', true);
     }
   });
 

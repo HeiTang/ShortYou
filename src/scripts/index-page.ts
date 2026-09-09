@@ -31,6 +31,7 @@ export function initIndexPage(config: IndexPageConfig): void {
   const turnstileSiteKey = config.turnstileSiteKey;
   const pageBase = `${window.location.origin}${window.location.pathname}`;
   const hash = readDecodedHash();
+  const tokenStorageKey = `shortyou:capabilityToken:${window.location.pathname}`;
 
   setCurrentYear();
 
@@ -211,6 +212,11 @@ export function initIndexPage(config: IndexPageConfig): void {
 
   const enterAuthorizedMode = (token: string): void => {
     capabilityToken = token;
+    try {
+      window.sessionStorage.setItem(tokenStorageKey, token);
+    } catch {
+      // Storage may be blocked; authorization still works for this page load.
+    }
     history.replaceState({}, '', `${window.location.pathname}${window.location.search}`);
     setupTurnstile();
     updateModeHint();
@@ -232,6 +238,14 @@ export function initIndexPage(config: IndexPageConfig): void {
     }
 
     enterAuthorizedMode(tokenFromHash);
+  } else if (!hash) {
+    let savedToken = '';
+    try {
+      savedToken = window.sessionStorage.getItem(tokenStorageKey) || '';
+    } catch {
+      // Without session storage, keep the default playground mode.
+    }
+    if (savedToken) enterAuthorizedMode(savedToken);
   }
 
   if (hash && !hash.startsWith('t=')) {

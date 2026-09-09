@@ -164,8 +164,17 @@ export function initIndexPage(config: IndexPageConfig): void {
     modeDescription.textContent = description;
   };
 
+  const hasValidUrl = (): boolean => {
+    try {
+      const url = new URL(inputUrl.value.trim());
+      return url.protocol === 'https:' || url.protocol === 'http:';
+    } catch {
+      return false;
+    }
+  };
+
   const updateSubmitState = (): void => {
-    const valid = inputUrl.value.trim().startsWith('http');
+    const valid = hasValidUrl();
     aliasController.syncSubmitButton(submitButton, valid);
     submitButton.disabled = isSubmitting || !valid || (isAuthorizedMode() && !turnstileVerified);
     submitButton.setAttribute('aria-busy', String(isSubmitting));
@@ -336,7 +345,7 @@ export function initIndexPage(config: IndexPageConfig): void {
     event.preventDefault();
     if (isSubmitting || submitButton.disabled) return;
     const url = inputUrl.value.trim();
-    if (!url.startsWith('http')) return;
+    if (!hasValidUrl()) return;
     clearFormFeedback();
     showToast('');
 

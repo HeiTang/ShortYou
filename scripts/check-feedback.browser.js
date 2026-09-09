@@ -43,7 +43,16 @@
     for (const width of [390, 1280]) {
       await page.setViewportSize({ width, height: 844 });
       await page.goto('http://127.0.0.1:4321/');
-      check(await page.locator('#btn').isVisible() && await page.locator('#btn').isDisabled(), 'Empty submit must remain visible and disabled');
+      check(await page.locator('#url').inputValue() === 'https://', 'URL must start with HTTPS');
+      check(await page.locator('#btn').isVisible() && await page.locator('#btn').isDisabled(), 'Protocol alone must keep submit disabled');
+      for (const invalid of ['', 'http://', 'https://', 'httpjunk', 'ftp://example.com']) {
+        await page.locator('#url').fill(invalid);
+        check(await page.locator('#btn').isDisabled(), `${invalid}: invalid URL must not submit`);
+      }
+      for (const valid of ['http://example.com', 'https://example.com/path?q=1']) {
+        await page.locator('#url').fill(valid);
+        check(await page.locator('#btn').isEnabled(), `${valid}: HTTP(S) URL must be accepted`);
+      }
       const button = await page.locator('#btn').boundingBox();
       check(button.width === 44 && button.height === 44, 'Submit target must be 44px square');
       await page.locator('#url').fill('https://example.com');

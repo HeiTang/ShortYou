@@ -7,12 +7,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   description="ShortYou is a URL Shortener."
   robots="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1"
 >
-  <section class="mx-auto my-8 w-full max-w-xl text-center">
-    <h1 class="title-font mb-12 text-[min(3.75rem,14vw)] leading-none md:text-8xl">
+  <section class="hero mx-auto w-full max-w-xl text-center">
+    <h1 class="hero-title title-font leading-none">
       Just&nbsp;Shorten&nbsp;It
       <span class="block">ヽ(‘ ∇‘ )ノ</span>
     </h1>
-    <p class="title-font mb-7 text-3xl text-slate-200 md:text-4xl">
+    <p class="hero-subtitle title-font text-slate-200">
       <span
         class="txt-rotate"
         data-period="1000"
@@ -141,3 +141,39 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     }
   </script>
 </BaseLayout>
+
+<style>
+  .hero {
+    margin-block: min(2rem, 4dvh);
+  }
+
+  .hero-title {
+    font-size: min(3.75rem, calc((100vw - 2rem) / 7.5), 12dvh);
+    margin-bottom: min(3rem, 5dvh);
+  }
+
+  .hero-subtitle {
+    font-size: min(1.875rem, calc((100vw - 2rem) / 16), 5dvh);
+    margin-bottom: min(1.75rem, 3dvh);
+  }
+
+  @media (min-width: 768px) {
+    .hero-title {
+      font-size: min(6rem, 12dvh);
+    }
+
+    .hero-subtitle {
+      font-size: min(2.25rem, 5dvh);
+    }
+  }
+  @media (max-height: 600px) {
+    .hero {
+      margin-block: 2dvh;
+    }
+
+    .hero-title {
+      font-size: min(3.75rem, calc((100vw - 2rem) / 7.5), 8dvh);
+      margin-bottom: 2dvh;
+    }
+  }
+</style>

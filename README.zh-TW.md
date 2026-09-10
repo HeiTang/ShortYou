@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>✨ ShortYou</h1>
+  <h1><img src="./src/assets/shortyou-logo.svg" width="36" height="36" align="top" alt=""> ShortYou</h1>
   <a href="https://github.com/HeiTang/ShortYou/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/HeiTang/ShortYou?color=orange" alt="License">
   </a>
@@ -11,7 +11,7 @@
   </a>
   <br><br>
   <img src="https://readme-typing-svg.herokuapp.com?font=Changa&color=00F71A&size=30&center=true&vCenter=true&height=60&lines=Too+Long%3F+Shorten+it!;Too+Height%3F++Shorten+it!;Too+Fat%3F++Shorten+it!;30cm%3F++Shorten+it!">
-  <img src="./docs/demo/page.png" alt="ShortYou homepage preview">
+  <img src="./docs/screenshots/home.png" alt="ShortYou homepage preview">
   <p>- - -</p>
   <p><i>「 ShortYou 是一個輕量的短網址服務。 」</i></p>
   <p>ShortYou 可以把冗長網址縮短成更容易分享的連結。</p>

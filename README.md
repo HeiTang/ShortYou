@@ -1,6 +1,6 @@
 
 <div align="center">
-  <h1>✨ ShortYou</h1>
+  <h1><img src="./src/assets/shortyou-logo.svg" width="36" height="36" align="top" alt=""> ShortYou</h1>
   <a href="https://github.com/HeiTang/ShortYou/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/HeiTang/ShortYou?color=orange" alt="License">
   </a>
